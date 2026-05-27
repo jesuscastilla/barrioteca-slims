@@ -1,2 +1,2 @@
 # acalenca-barrioteca
-El código fuente de SLiMS configurado y con app externa para utilizarlo como biblioteca autogestionada, independiente y vecinal. 
+El código fuente de SLiMS modificado y con conexión web a una app externa para utilizarlo como biblioteca autogestionada, independiente y vecinal. 

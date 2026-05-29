@@ -22,11 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 header('Content-Type: application/json; charset=utf-8');
 
 // 1. CONEXIÓN DIRECTA Y SEGURA A MARIADB (Sin depender de archivos de SLiMS)
-$db_host = '127.0.0.1';
-$db_port = '3307';
-$db_name = 'acalenca';
-$db_user = 'acalenca';
-$db_pass = '$kiesoverCairo99'; // <-- Pon tu contraseña real aquí
+// Utilizar variables de entorno para la configuración de la base de datos
+$db_host = getenv('DB_HOST') ?: '127.0.0.1';
+$db_port = getenv('DB_PORT') ?: '3306';
+$db_name = getenv('DB_NAME') ?: 'senayan';
+$db_user = getenv('DB_USER') ?: 'root';
+$db_pass = getenv('DB_PASS') ?: 'Pass123';
+
+// Validar que las credenciales estén configuradas
+if (empty($db_host) || empty($db_name) || empty($db_user)) {
+    echo json_encode(["status" => "error", "message" => "Configuración de base de datos incompleta. Verifica las variables de entorno."]);
+    exit;
+}
 
 try {
     $pdo = new PDO("mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [

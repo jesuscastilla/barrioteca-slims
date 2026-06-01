@@ -24,10 +24,10 @@ header('Content-Type: application/json; charset=utf-8');
 // 1. CONEXIÓN DIRECTA Y SEGURA A MARIADB (Sin depender de archivos de SLiMS)
 // Utilizar variables de entorno para la configuración de la base de datos
 $db_host = getenv('DB_HOST') ?: '127.0.0.1';
-$db_port = getenv('DB_PORT') ?: '3306';
-$db_name = getenv('DB_NAME') ?: 'senayan';
-$db_user = getenv('DB_USER') ?: 'root';
-$db_pass = getenv('DB_PASS') ?: 'Pass123';
+$db_port = getenv('DB_PORT') ?: '3307';
+$db_name = getenv('DB_NAME') ?: 'acalenca';
+$db_user = getenv('DB_USER') ?: 'acalenca';
+$db_pass = getenv('DB_PASS') ?: '$kiesoverCairo99';
 
 // Validar que las credenciales estén configuradas
 if (empty($db_host) || empty($db_name) || empty($db_user)) {

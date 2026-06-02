@@ -23,6 +23,9 @@ RUN chown -R www-data:www-data /var/www/html/files
 RUN chown -R www-data:www-data /var/www/html/images
 RUN chown -R www-data:www-data /var/www/html/repository
 
+# Asegurar que el directorio de portadas existe y es escribible
+RUN mkdir -p /var/www/html/images/docs && chown www-data:www-data /var/www/html/images/docs
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

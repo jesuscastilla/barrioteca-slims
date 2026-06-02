@@ -43,5 +43,13 @@ EOF
 echo "PHP configuration file created: /var/www/html/config/database.php"
 cat /var/www/html/config/database.php
 
+# Ajustar permisos en runtime (necesario para volúmenes en Synology NAS)
+chown -R www-data:www-data /var/www/html/files 2>/dev/null || true
+chown -R www-data:www-data /var/www/html/images 2>/dev/null || true
+chown -R www-data:www-data /var/www/html/repository 2>/dev/null || true
+mkdir -p /var/www/html/images/docs 2>/dev/null || true
+chown www-data:www-data /var/www/html/images/docs 2>/dev/null || true
+chmod -R 775 /var/www/html/files /var/www/html/images /var/www/html/repository 2>/dev/null || true
+
 # Start the PHP application
 exec "$@"

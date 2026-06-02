@@ -38,6 +38,21 @@ services:
     networks:
       - proxy
 
+  app:
+    container_name: barrioteca-pwa
+    build:
+      context: ../acalenca-barrioteca-app
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - SLIMS_API_BASE=http://slims/api/v1
+    ports:
+      - "3000:3000"
+    networks:
+      - proxy
+    depends_on:
+      - slims
+
 networks:
   proxy:
     driver: bridge

@@ -35,6 +35,7 @@ $menu['bibliography.marc-sru'] = array(__('MARC SRU'), MWB.'bibliography/marcsru
 $menu['bibliography.z3950-sru'] = array(__('Z3950 SRU'), MWB.'bibliography/z3950sru.php', __('Grab Bibliographic Data from Z3950 SRU Web Services'));
 //$menu['bibliography.z3950-service'] = array(__('Z3950 Service'), MWB.'bibliography/z3950.php', __('Grab Bibliographic Data from Z3950 Web Services'));
 $menu['bibliography.p2p-service'] = array(__('P2P Service'), MWB.'bibliography/p2p.php', __('Grab Bibliographic Data from Other SLiMS Web Services'));
+$menu['bibliography.isbn-lookup'] = array(__('ISBN Lookup'), MWB.'bibliography/isbn_lookup.php', __('Catalogar libros automáticamente mediante ISBN (Google Books, Open Library, BNE)'));
 $menu['bibliography.header-tools'] = array('Header', __('TOOLS'));
 $menu['bibliography.labels-printing'] = array(__('Labels Printing'), MWB.'bibliography/dl_print.php', __('Print Document Labels'));
 $menu['bibliography.item-barcodes-printing'] = array(__('Item Barcodes Printing'), MWB.'bibliography/item_barcode_generator.php', __('Print Item Barcodes'));

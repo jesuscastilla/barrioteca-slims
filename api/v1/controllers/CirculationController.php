@@ -106,7 +106,7 @@ class CirculationController extends Controller
             $query = $this->db->query("
                 SELECT i.item_code, i.item_status_id, i.coll_type_id, i.call_number,
                        b.biblio_id, b.title, b.isbn_issn, b.author, b.publisher,
-                       COUNT(DISTINCT CASE WHEN l.is_lent = 1 AND l.is_return = 0 THEN l.loan_id END) as active_loans
+COUNT(DISTINCT CASE WHEN l.is_returned = 0 THEN l.loan_id END) as active_loans
                 FROM item i
                 LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
                 LEFT JOIN loan l ON i.item_code = l.item_code
@@ -221,11 +221,11 @@ class CirculationController extends Controller
 
             $item = $item_query->fetch_assoc();
 
-            // Verificar que el item no esté ya prestado
+// Verificar que el item no esté ya prestado
             $active_loan_query = $this->db->query("
                 SELECT loan_id FROM loan
                 WHERE item_code = '" . $this->db->real_escape_string($item_code) . "'
-                AND is_lent = 1 AND is_return = 0
+                AND is_returned = 0
                 LIMIT 1
             ");
 
@@ -237,18 +237,17 @@ class CirculationController extends Controller
                 return;
             }
 
-            // Crear el préstamo
-            $loan_date = date('Y-m-d H:i:s');
+// Crear el préstamo
+            $loan_date = date('Y-m-d');
             $due_date = date('Y-m-d', strtotime('+15 days'));
-
+    
             $insert_query = "
-                INSERT INTO loan (item_code, member_id, loan_date, due_date, is_lent, is_return, renewals)
+                INSERT INTO loan (item_code, member_id, loan_date, due_date, is_returned, renewals)
                 VALUES (
                     '" . $this->db->real_escape_string($item_code) . "',
                     '" . $this->db->real_escape_string($member_id) . "',
                     '" . $this->db->real_escape_string($loan_date) . "',
                     '" . $this->db->real_escape_string($due_date) . "',
-                    1,
                     0,
                     0
                 )
@@ -312,8 +311,8 @@ class CirculationController extends Controller
                 LEFT JOIN member m ON l.member_id = m.member_id
                 LEFT JOIN item i ON l.item_code = i.item_code
                 LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
-                WHERE l.item_code = '" . $this->db->real_escape_string($item_code) . "'
-                AND l.is_lent = 1 AND l.is_return = 0
+WHERE l.item_code = '" . $this->db->real_escape_string($item_code) . "'
+                AND l.is_returned = 0
                 LIMIT 1
             ");
 
@@ -327,13 +326,13 @@ class CirculationController extends Controller
 
             $loan = $loan_query->fetch_assoc();
 
-            // Registrar la devolución
-            $return_date = date('Y-m-d H:i:s');
+// Registrar la devolución
+            $return_date = date('Y-m-d');
             $is_overdue = (strtotime($loan['due_date']) < time()) ? 1 : 0;
-
+    
             $update_query = "
                 UPDATE loan
-                SET is_return = 1, return_date = '" . $this->db->real_escape_string($return_date) . "', is_lent = 0
+                SET is_returned = 1, return_date = '" . $this->db->real_escape_string($return_date) . "'
                 WHERE loan_id = " . (int)$loan['loan_id']
             ;
 

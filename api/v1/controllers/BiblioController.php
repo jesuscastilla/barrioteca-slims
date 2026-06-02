@@ -134,5 +134,38 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
+    /**
+     * Buscar libros en el catálogo
+     * GET /api/v1/biblio/search?q={query}
+     */
+    public function search()
+    {
+        $q = $_GET['q'] ?? '';
+        if (empty($q)) {
+            parent::withJson([]);
+            return;
+        }
+
+        $safe_q = $this->db->real_escape_string($q);
+        $sql = "SELECT b.biblio_id, b.title, b.isbn_issn, b.image,
+                       (SELECT author_name FROM mst_author ma JOIN biblio_author ba ON ma.author_id = ba.author_id WHERE ba.biblio_id = b.biblio_id LIMIT 1) as author,
+                       (SELECT COUNT(*) FROM item i LEFT JOIN loan l ON i.item_code = l.item_code WHERE i.biblio_id = b.biblio_id AND l.is_returned = 0) as active_loans,
+                       (SELECT COUNT(*) FROM item i WHERE i.biblio_id = b.biblio_id) as total_items
+                FROM biblio b
+                WHERE (b.title LIKE '%$safe_q%' OR b.isbn_issn LIKE '%$safe_q%')
+                AND b.opac_hide < 1
+                LIMIT 20";
+
+        $query = $this->db->query($sql);
+        $results = [];
+        while ($data = $query->fetch_assoc()) {
+            $data['image'] = $this->getImagePath($data['image']);
+            $data['is_available'] = ($data['active_loans'] < $data['total_items']);
+            $results[] = $data;
+        }
+
+        parent::withJson($results);
+    }
+
 
 }

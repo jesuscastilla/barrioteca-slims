@@ -82,6 +82,16 @@ curl_close($ch);
 // Mapear respuesta para compatibilidad con el frontend feminizado
 $data = json_decode($response, true);
 
+// Add check for non-JSON response from SLiMS
+if (json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code($http_code >= 400 ? $http_code : 500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'El servidor devolvió una respuesta no válida (quizás el registro no existe o hay un error).'
+    ]);
+    exit;
+}
+
 if ($path == '/catalog-proxy' && is_array($data)) {
     $results = array_map(function($item) {
         return [
@@ -95,5 +105,6 @@ if ($path == '/catalog-proxy' && is_array($data)) {
     }, $data);
     echo json_encode($results);
 } else {
+    http_response_code($http_code);
     echo $response;
 }

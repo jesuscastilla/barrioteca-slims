@@ -1,6 +1,5 @@
 <?php
 /**
- * @Created by          : Waris Agung Widodo (ido.alit@gmail.com)
  * @Date                : 09/11/20 22.35
  * @File name           : ItemController.php
  */
@@ -20,6 +19,9 @@ class ItemController extends Controller
         $this->db = $obj_db;
     }
 
+    /**
+     * Obtener el total de todos los ejemplares
+     */
     public function getTotalAll()
     {
         $query = $this->db->query("SELECT COUNT(item_id) FROM item");
@@ -28,6 +30,9 @@ class ItemController extends Controller
         ]);
     }
 
+    /**
+     * Obtener el total de ejemplares prestados
+     */
     public function getTotalLent()
     {
         $query = $this->db->query("SELECT COUNT(loan_id) FROM loan WHERE is_lent=1 AND is_return=0");
@@ -36,6 +41,9 @@ class ItemController extends Controller
         ]);
     }
 
+    /**
+     * Obtener el total de ejemplares disponibles
+     */
     public function getTotalAvailable()
     {
         $query = $this->db->query("SELECT (SELECT COUNT(item_id) FROM item) - (SELECT COUNT(loan_id) FROM loan WHERE is_lent=1 AND is_return=0) AS 'available'");

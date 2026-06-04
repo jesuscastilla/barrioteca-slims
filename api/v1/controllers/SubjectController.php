@@ -1,6 +1,5 @@
 <?php
 /**
- * @Created by          : Waris Agung Widodo (ido.alit@gmail.com)
  * @Date                : 10/09/20 21.27
  * @File name           : SubjectController.php
  */
@@ -22,6 +21,9 @@ class SubjectController extends Controller {
         $this->db = $obj_db;
     }
 
+    /**
+     * Obtener los temas (materias) más populares
+     */
     function getPopular() {
         $limit = 5;
         $year = date('Y');
@@ -45,6 +47,8 @@ class SubjectController extends Controller {
         while ($data = $query->fetch_row()) {
             $return[] = $data[0];
         }
+        
+        // Si no hay suficientes populares, completar con los más recientes
         if ($query->num_rows < $limit) {
             $need = $limit - $query->num_rows;
             if ($need > 0) {
@@ -55,6 +59,9 @@ class SubjectController extends Controller {
         Cache::set($cache_name, json_encode($return));
     }
 
+    /**
+     * Obtener los temas (materias) más recientes
+     */
     function getLatest($limit = 5) {
 
         $sql = "SELECT topic FROM mst_topic mt

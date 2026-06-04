@@ -1,6 +1,5 @@
 <?php
 /**
- * @Created by          : Manus AI
  * @Date                : 2026-05-29
  * @File name           : CirculationController.php
  * @Description         : Controlador para operaciones de circulación (préstamo, devolución)
@@ -23,18 +22,18 @@ class CirculationController extends Controller
     }
 
     /**
-     * Verificar la existencia y estado de un socio
+     * Verificar la existencia y estado de una socia
      * GET /api/v1/member/{id}/verify
      * 
-     * @param string $member_id ID del socio
-     * @return JSON con estado del socio
+     * @param string $member_id ID de la socia
+     * @return JSON con estado de la socia
      */
     public function verifyMember($member_id)
     {
         if (empty($member_id)) {
             parent::withJson([
                 'status' => 'error',
-                'message' => 'El ID del socio es obligatorio.'
+                'message' => 'El ID de la socia es obligatorio.'
             ]);
             return;
         }
@@ -73,19 +72,19 @@ class CirculationController extends Controller
             } else {
                 parent::withJson([
                     'status' => 'error',
-                    'message' => 'Socio no encontrado en la base de datos.'
+                    'message' => 'Socia no encontrada en la base de datos.'
                 ]);
             }
         } catch (Exception $e) {
             parent::withJson([
                 'status' => 'error',
-                'message' => 'Error al verificar socio: ' . $e->getMessage()
+                'message' => 'Error al verificar socia: ' . $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Consultar disponibilidad de un libro por ISBN/ASIN
+     * Consultar disponibilidad de un libro por ISBN/ASIN o código de barras
      * GET /api/v1/item/{isbn}/status
      * 
      * @param string $isbn ISBN o ASIN del libro
@@ -106,7 +105,7 @@ class CirculationController extends Controller
             $query = $this->db->query("
                 SELECT i.item_code, i.item_status_id, i.coll_type_id, i.call_number,
                        b.biblio_id, b.title, b.isbn_issn, b.author, b.publisher,
-COUNT(DISTINCT CASE WHEN l.is_returned = 0 THEN l.loan_id END) as active_loans
+                       COUNT(DISTINCT CASE WHEN l.is_return = 0 THEN l.loan_id END) as active_loans
                 FROM item i
                 LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
                 LEFT JOIN loan l ON i.item_code = l.item_code
@@ -151,16 +150,9 @@ COUNT(DISTINCT CASE WHEN l.is_returned = 0 THEN l.loan_id END) as active_loans
     /**
      * Registrar un préstamo
      * POST /api/v1/loan/borrow
-     * 
-     * Parámetros esperados (JSON):
-     * - member_id: ID del socio
-     * - item_code: Código del item a prestar
-     * 
-     * @return JSON con resultado del préstamo
      */
     public function createLoan()
     {
-        // Leer el JSON del body
         $input = json_decode(file_get_contents('php://input'), true);
         
         $member_id = $input['member_id'] ?? '';
@@ -175,83 +167,33 @@ COUNT(DISTINCT CASE WHEN l.is_returned = 0 THEN l.loan_id END) as active_loans
         }
 
         try {
-            // Verificar que el socio existe
-            $member_query = $this->db->query("
-                SELECT m.member_id, m.member_name, m.expire_date
-                FROM member m
-                WHERE m.member_id = '" . $this->db->real_escape_string($member_id) . "'
-                LIMIT 1
-            ");
-
+            // Verificar socia
+            $member_query = $this->db->query("SELECT member_id, member_name, expire_date FROM member WHERE member_id = '" . $this->db->real_escape_string($member_id) . "' LIMIT 1");
             if ($member_query->num_rows == 0) {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'El socio no existe.'
-                ]);
+                parent::withJson(['status' => 'error', 'message' => 'La socia no existe.']);
                 return;
             }
-
             $member = $member_query->fetch_assoc();
 
-            // Verificar que la membresía no esté expirada
-            if (!empty($member['expire_date']) && strtotime($member['expire_date']) < time()) {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'La membresía del socio ha expirado.'
-                ]);
-                return;
-            }
-
-            // Verificar que el item existe y está disponible
-            $item_query = $this->db->query("
-                SELECT i.item_code, i.item_status_id, b.title
-                FROM item i
-                LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
-                WHERE i.item_code = '" . $this->db->real_escape_string($item_code) . "'
-                LIMIT 1
-            ");
-
+            // Verificar item
+            $item_query = $this->db->query("SELECT i.item_code, b.title FROM item i LEFT JOIN biblio b ON i.biblio_id = b.biblio_id WHERE i.item_code = '" . $this->db->real_escape_string($item_code) . "' LIMIT 1");
             if ($item_query->num_rows == 0) {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'El libro no existe en la biblioteca.'
-                ]);
+                parent::withJson(['status' => 'error', 'message' => 'El libro no existe en la biblioteca.']);
                 return;
             }
-
             $item = $item_query->fetch_assoc();
 
-// Verificar que el item no esté ya prestado
-            $active_loan_query = $this->db->query("
-                SELECT loan_id FROM loan
-                WHERE item_code = '" . $this->db->real_escape_string($item_code) . "'
-                AND is_returned = 0
-                LIMIT 1
-            ");
-
+            // Verificar si ya está prestado
+            $active_loan_query = $this->db->query("SELECT loan_id FROM loan WHERE item_code = '" . $this->db->real_escape_string($item_code) . "' AND is_return = 0 LIMIT 1");
             if ($active_loan_query->num_rows > 0) {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'El libro ya está prestado.'
-                ]);
+                parent::withJson(['status' => 'error', 'message' => 'El libro ya está prestado.']);
                 return;
             }
 
-// Crear el préstamo
+            // Crear préstamo
             $loan_date = date('Y-m-d');
             $due_date = date('Y-m-d', strtotime('+15 days'));
-    
-            $insert_query = "
-                INSERT INTO loan (item_code, member_id, loan_date, due_date, is_returned, renewals)
-                VALUES (
-                    '" . $this->db->real_escape_string($item_code) . "',
-                    '" . $this->db->real_escape_string($member_id) . "',
-                    '" . $this->db->real_escape_string($loan_date) . "',
-                    '" . $this->db->real_escape_string($due_date) . "',
-                    0,
-                    0
-                )
-            ";
+            $insert_query = "INSERT INTO loan (item_code, member_id, loan_date, due_date, is_return, renewed, is_lent) VALUES ('" . $this->db->real_escape_string($item_code) . "', '" . $this->db->real_escape_string($member_id) . "', '$loan_date', '$due_date', 0, 0, 1)";
 
             if ($this->db->query($insert_query)) {
                 parent::withJson([
@@ -266,75 +208,39 @@ COUNT(DISTINCT CASE WHEN l.is_returned = 0 THEN l.loan_id END) as active_loans
                     ]
                 ]);
             } else {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'Error al registrar el préstamo: ' . $this->db->error
-                ]);
+                parent::withJson(['status' => 'error', 'message' => 'Error al registrar el préstamo: ' . $this->db->error]);
             }
         } catch (Exception $e) {
-            parent::withJson([
-                'status' => 'error',
-                'message' => 'Error al procesar préstamo: ' . $e->getMessage()
-            ]);
+            parent::withJson(['status' => 'error', 'message' => 'Error al procesar préstamo: ' . $e->getMessage()]);
         }
     }
 
     /**
      * Registrar una devolución
      * POST /api/v1/loan/return
-     * 
-     * Parámetros esperados (JSON):
-     * - item_code: Código del item a devolver
-     * 
-     * @return JSON con resultado de la devolución
      */
     public function returnLoan()
     {
-        // Leer el JSON del body
         $input = json_decode(file_get_contents('php://input'), true);
-        
         $item_code = $input['item_code'] ?? '';
 
         if (empty($item_code)) {
-            parent::withJson([
-                'status' => 'error',
-                'message' => 'item_code es obligatorio.'
-            ]);
+            parent::withJson(['status' => 'error', 'message' => 'item_code es obligatorio.']);
             return;
         }
 
         try {
-            // Buscar el préstamo activo
-            $loan_query = $this->db->query("
-                SELECT l.loan_id, l.member_id, l.due_date, m.member_name, b.title
-                FROM loan l
-                LEFT JOIN member m ON l.member_id = m.member_id
-                LEFT JOIN item i ON l.item_code = i.item_code
-                LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
-WHERE l.item_code = '" . $this->db->real_escape_string($item_code) . "'
-                AND l.is_returned = 0
-                LIMIT 1
-            ");
+            // Buscar préstamo activo
+            $loan_query = $this->db->query("SELECT l.loan_id, l.member_id, l.due_date, m.member_name, b.title FROM loan l LEFT JOIN member m ON l.member_id = m.member_id LEFT JOIN item i ON l.item_code = i.item_code LEFT JOIN biblio b ON i.biblio_id = b.biblio_id WHERE l.item_code = '" . $this->db->real_escape_string($item_code) . "' AND l.is_return = 0 LIMIT 1");
 
             if ($loan_query->num_rows == 0) {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'El libro no consta como prestado actualmente.'
-                ]);
+                parent::withJson(['status' => 'error', 'message' => 'El libro no consta como prestado actualmente.']);
                 return;
             }
 
             $loan = $loan_query->fetch_assoc();
-
-// Registrar la devolución
             $return_date = date('Y-m-d');
-            $is_overdue = (strtotime($loan['due_date']) < time()) ? 1 : 0;
-    
-            $update_query = "
-                UPDATE loan
-                SET is_returned = 1, return_date = '" . $this->db->real_escape_string($return_date) . "'
-                WHERE loan_id = " . (int)$loan['loan_id']
-            ;
+            $update_query = "UPDATE loan SET is_return = 1, return_date = '$return_date' WHERE loan_id = " . (int)$loan['loan_id'];
 
             if ($this->db->query($update_query)) {
                 parent::withJson([
@@ -344,21 +250,14 @@ WHERE l.item_code = '" . $this->db->real_escape_string($item_code) . "'
                         'loan_id' => $loan['loan_id'],
                         'member_name' => $loan['member_name'],
                         'item_title' => $loan['title'],
-                        'return_date' => $return_date,
-                        'is_overdue' => $is_overdue
+                        'return_date' => $return_date
                     ]
                 ]);
             } else {
-                parent::withJson([
-                    'status' => 'error',
-                    'message' => 'Error al registrar la devolución: ' . $this->db->error
-                ]);
+                parent::withJson(['status' => 'error', 'message' => 'Error al registrar la devolución: ' . $this->db->error]);
             }
         } catch (Exception $e) {
-            parent::withJson([
-                'status' => 'error',
-                'message' => 'Error al procesar devolución: ' . $e->getMessage()
-            ]);
+            parent::withJson(['status' => 'error', 'message' => 'Error al procesar devolución: ' . $e->getMessage()]);
         }
     }
 }

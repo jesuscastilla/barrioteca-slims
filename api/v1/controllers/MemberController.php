@@ -1,6 +1,5 @@
 <?php
 /**
- * @Created by          : Waris Agung Widodo (ido.alit@gmail.com)
  * @Date                : 10/09/20 21.31
  * @File name           : MemberController.php
  */
@@ -26,6 +25,9 @@ class MemberController extends Controller
         $this->db = $obj_db;
     }
 
+    /**
+     * Obtener las socias con más préstamos en el año actual
+     */
     function getTopMember() {
         $limit = 3;
         $year = date('Y');
@@ -56,6 +58,7 @@ class MemberController extends Controller
             }
         }
 
+        // Ordenar por el campo calculado 'order'
         usort($return, function ($a, $b) {
             return $b['order'] <=> $a['order'];
         });

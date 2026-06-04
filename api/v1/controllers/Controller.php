@@ -1,17 +1,19 @@
 <?php
 
 /**
- * @author              : Waris Agung Widodo
  * @Date                : 2017-07-05 12:17:02
- * @Last Modified by    : ido
- * @Last Modified time  : 2017-07-05 13:53:28
- *
- * Copyright (C) 2017  Waris Agung Widodo (ido.alit@gmail.com)
+ * @File name           : Controller.php
+ * @Description         : Clase base para todos los controladores de la API
  */
 
 class Controller
 {
- 
+    /**
+     * Enviar respuesta en formato JSON
+     * 
+     * @param mixed $data Datos a enviar (array o string JSON)
+     * @return bool
+     */
     public function withJson($data)
     {
         header('Content-type: application/json');
@@ -23,5 +25,4 @@ class Controller
 
         return true;
     }
-    
 }

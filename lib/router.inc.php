@@ -1,12 +1,9 @@
 <?php
 
 /**
- * @author              : Waris Agung Widodo
  * @Date                : 2017-07-04 15:27:14
- * @Last Modified by    : ido
- * @Last Modified time  : 2017-07-05 15:19:06
- *
- * Copyright (C) 2017  Waris Agung Widodo (ido.alit@gmail.com)
+ * @File name           : router.inc.php
+ * @Description         : Extensión de AltoRouter para el manejo de rutas en SLiMS
  */
 
 require 'AltoRouter.php';
@@ -24,12 +21,15 @@ class Router extends AltoRouter
         $this->db = $obj_db;
     }
 
+    /**
+     * Buscar coincidencia de ruta para la petición actual
+     */
     public function match($requestUrl = null, $requestMethod = null)
     {
         $params = array();
         $match = false;
 
-        // set Request Url if it isn't passed as parameter
+        // Establecer URL de la petición si no se pasa como parámetro
         if($requestUrl === null) {
             $path = explode('/', $_GET['p']);
             if ($path[0] == $this->basePath) {
@@ -39,15 +39,15 @@ class Router extends AltoRouter
             }
         }
 
-        // strip base path from request url
+        // Eliminar el path base de la URL de la petición
         $requestUrl = substr($requestUrl, strlen($this->basePath));
 
-        // Strip query string (?a=b) from Request Url
+        // Eliminar la cadena de consulta (?a=b) de la URL
         if (($strpos = strpos($requestUrl, '?')) !== false) {
             $requestUrl = substr($requestUrl, 0, $strpos);
         }
 
-        // set Request Method if it isn't passed as a parameter
+        // Establecer el método de la petición si no se pasa como parámetro
         if($requestMethod === null) {
             $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
         }
@@ -57,21 +57,21 @@ class Router extends AltoRouter
 
             $method_match = (stripos($methods, $requestMethod) !== false);
 
-            // Method did not match, continue to next route.
+            // Si el método no coincide, continuar con la siguiente ruta
             if (!$method_match) continue;
 
             if ($route === '*') {
-                // * wildcard (matches all)
+                // Comodín * (coincide con todo)
                 $match = true;
             } elseif (isset($route[0]) && $route[0] === '@') {
-                // @ regex delimiter
+                // Delimitador @ para expresiones regulares
                 $pattern = '`' . substr($route, 1) . '`u';
                 $match = preg_match($pattern, $requestUrl, $params) === 1;
             } elseif (($position = strpos($route, '[')) === false) {
-                // No params in url, do string comparison
+                // Sin parámetros en la URL, hacer comparación de cadenas
                 $match = strcmp($requestUrl, $route) === 0;
             } else {
-                // Compare longest non-param string with url
+                // Comparar la cadena más larga sin parámetros con la URL
                 if (strncmp($requestUrl, $route, $position) !== 0) {
                     continue;
                 }
@@ -80,7 +80,6 @@ class Router extends AltoRouter
             }
 
             if ($match) {
-
                 if ($params) {
                     foreach($params as $key => $value) {
                         if(is_numeric($key)) unset($params[$key]);
@@ -97,6 +96,9 @@ class Router extends AltoRouter
         return false;
     }
 
+    /**
+     * Convertir una cadena de controlador@metodo en un ejecutable
+     */
     public function makeCallable($string)
     {
         $method = explode('@', $string);
@@ -109,23 +111,24 @@ class Router extends AltoRouter
         return false;
     }
 
+    /**
+     * Ejecutar la ruta que coincida con la petición actual
+     */
     public function run()
     {
-        // match current request url
+        // Buscar coincidencia para la URL actual
         $match = $this->match();
-        // call closure or throw 404 status
+        
+        // Ejecutar el callback o lanzar error 404
         if( $match && is_callable( $match['target'] ) ) {
             call_user_func_array( $match['target'], $match['params'] ); 
         } else {
             if ($callable = $this->makeCallable($match['target']??'')) {
                 call_user_func_array($callable, $match['params']);
             } else {
-                // no route was matched
-                // header( $_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
-                // include $this->sysconf['template']['dir'].'/'.$this->sysconf['template']['theme'].'/404.php';
-                // header ("location:index.php");
+                // No se encontró ninguna ruta que coincida
                 http_response_code(404);
-                throw new Exception("Not found!");
+                throw new Exception("¡Ruta no encontrada!");
             }
         }
     }

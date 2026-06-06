@@ -20,7 +20,7 @@ echo "PHP configuration file created: /var/www/html/config/env.php"
 cat /var/www/html/config/env.php
 
 # Write environment variables to database.php
-cat <<EOF >/var/www/html/config/database.php
+cat <<EOF > /var/www/html/config/database.php
 <?php
 return [
     'default_profile' => 'SLiMS',
@@ -29,7 +29,7 @@ return [
         'SLiMS' => [
             'host' => '${DB_HOST}',
             'database' => '${DB_NAME}',
-            'port' => '${DB_PORT}',
+            'port' => ${DB_PORT},
             'username' => '${DB_USER}',
             'password' => '${DB_PASS}',
             'options' => [

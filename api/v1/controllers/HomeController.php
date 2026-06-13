@@ -18,7 +18,7 @@ class HomeController extends Controller
     {
         $response = array(
             'error' => false,
-            'message' => 'Bienvenida a la API de la Barrioteca Acalencá.'
+            'message' => 'Sugeng rawuh is selamat datang.'
             );
         parent::withJson($response);
     }

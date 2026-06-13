@@ -1,5 +1,6 @@
 <?php
 /**
+ * @Created by          : Waris Agung Widodo (ido.alit@gmail.com)
  * @Date                : 09/11/20 23.24
  * @File name           : LoanController.php
  */
@@ -19,9 +20,6 @@ class LoanController extends Controller
         $this->db = $obj_db;
     }
 
-    /**
-     * Obtener resumen de préstamos
-     */
     function getSummary() {
         parent::withJson([
             'data' => [
@@ -59,9 +57,6 @@ class LoanController extends Controller
         return ($query->fetch_row())[0];
     }
 
-    /**
-     * Obtener fechas para estadísticas
-     */
     public function getDate($start_date, $print = true)
     {
         $sql = "SELECT DATE_FORMAT(loan_date,'%d/%m') AS loandate, loan_date
@@ -78,11 +73,9 @@ class LoanController extends Controller
         return $date;
     }
 
-    /**
-     * Obtener resumen por fecha específica
-     */
     public function getSummaryDate($date)
     {
+
         $dates = $this->getDate($date, false);
         $return = [
             'loan' => [],
@@ -91,7 +84,6 @@ class LoanController extends Controller
         ];
         
         foreach ($dates['date'] as $value) {
-            // Préstamos nuevos
             $query_loan = $this->db->query("SELECT 
                         COUNT(loan_date) AS countloan
                     FROM 
@@ -110,7 +102,6 @@ class LoanController extends Controller
                 $return['loan'][] = 0;
             }
 
-            // Devoluciones
             $query_loan = $this->db->query("SELECT 
                         COUNT(loan_date) AS countloan
                     FROM 
@@ -128,7 +119,6 @@ class LoanController extends Controller
                 $return['return'][] = 0;
             }
 
-            // Renovaciones
             $query_loan = $this->db->query("SELECT 
                         COUNT(loan_date) AS countloan
                     FROM 

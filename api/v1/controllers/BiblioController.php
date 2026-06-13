@@ -1,7 +1,12 @@
 <?php
+
 /**
+ * @author              : Waris Agung Widodo
  * @Date                : 2017-07-05 12:15:12
- * @File name           : BiblioController.php
+ * @Last Modified by    : ido
+ * @Last Modified time  : 2017-07-05 15:08:08
+ *
+ * Copyright (C) 2017  Waris Agung Widodo (ido.alit@gmail.com)
  */
 
 require_once 'Controller.php';
@@ -26,9 +31,6 @@ class BiblioController extends Controller
         $this->db = $obj_db;
     }
 
-    /**
-     * Obtener los libros más populares
-     */
     public function getPopular()
     {
         $cache_name = 'biblio_popular';
@@ -50,8 +52,6 @@ class BiblioController extends Controller
             $data['image'] = $this->getImagePath($data['image']);
             $return[] = $data;
         }
-        
-        // Si no hay suficientes populares, completar con los últimos actualizados
         if ($query->num_rows < $limit) {
             $a_not_in = array ();
             foreach ($return as $k => $v) {
@@ -74,9 +74,6 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
-    /**
-     * Obtener los últimos libros añadidos
-     */
     public function getLatest() {
         $limit = 6;
 
@@ -95,9 +92,6 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
-    /**
-     * Obtener el total de libros
-     */
     public function getTotalAll()
     {
         $query = $this->db->query("SELECT COUNT(biblio_id) FROM biblio WHERE opac_hide < 1");
@@ -106,9 +100,6 @@ class BiblioController extends Controller
         ]);
     }
 
-    /**
-     * Obtener libros por GMD (Tipo de material)
-     */
     public function getByGmd($gmd) {
         $limit = 3;
         $sql = "SELECT b.biblio_id, b.title, b.image, b.notes
@@ -126,9 +117,6 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
-    /**
-     * Obtener libros por tipo de colección
-     */
     public function getByCollType($coll_type) {
         $limit = 3;
         $sql = "SELECT b.biblio_id, b.title, b.image, b.notes
@@ -146,36 +134,5 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
-    /**
-     * Buscar libros en el catálogo
-     * GET /api/v1/biblio/search?q={query}
-     */
-    public function search()
-    {
-        $q = $_GET['q'] ?? '';
-        if (empty($q)) {
-            parent::withJson([]);
-            return;
-        }
 
-        $safe_q = $this->db->real_escape_string($q);
-        $sql = "SELECT b.biblio_id, b.title, b.isbn_issn, b.image,
-                       (SELECT author_name FROM mst_author ma JOIN biblio_author ba ON ma.author_id = ba.author_id WHERE ba.biblio_id = b.biblio_id LIMIT 1) as author,
-                       (SELECT COUNT(*) FROM item i LEFT JOIN loan l ON i.item_code = l.item_code WHERE i.biblio_id = b.biblio_id AND l.is_return = 0) as active_loans,
-                       (SELECT COUNT(*) FROM item i WHERE i.biblio_id = b.biblio_id) as total_items
-                FROM biblio b
-                WHERE (b.title LIKE '%$safe_q%' OR b.isbn_issn LIKE '%$safe_q%')
-                AND b.opac_hide < 1
-                LIMIT 20";
-
-        $query = $this->db->query($sql);
-        $results = [];
-        while ($data = $query->fetch_assoc()) {
-            $data['image'] = $this->getImagePath($data['image']);
-            $data['is_available'] = ($data['active_loans'] < $data['total_items']);
-            $results[] = $data;
-        }
-
-        parent::withJson($results);
-    }
 }

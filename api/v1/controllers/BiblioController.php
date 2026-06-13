@@ -134,5 +134,62 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
+    /**
+     * Búsqueda en catálogo por título, autor o ISBN
+     * GET /api/v1/biblio/search?q={término}
+     * Usado por la PWA Barrioteca Acalencá
+     *
+     * @return JSON array con resultados de búsqueda
+     */
+    public function search()
+    {
+        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 
+        if (empty($q)) {
+            parent::withJson([]);
+            return;
+        }
+
+        $safe_q = $this->db->real_escape_string($q);
+
+        $sql = "SELECT
+                    b.biblio_id,
+                    b.title,
+                    b.author,
+                    b.isbn_issn,
+                    b.image,
+                    MIN(i.item_code) AS item_code,
+                    SUM(CASE WHEN l.is_return = 0 AND l.loan_id IS NOT NULL THEN 1 ELSE 0 END) AS active_loans
+                FROM biblio b
+                LEFT JOIN item i ON b.biblio_id = i.biblio_id
+                LEFT JOIN loan l ON i.item_code = l.item_code
+                WHERE
+                    b.opac_hide < 1 AND (
+                        b.title    LIKE '%{$safe_q}%' OR
+                        b.author   LIKE '%{$safe_q}%' OR
+                        b.isbn_issn LIKE '%{$safe_q}%'
+                    )
+                GROUP BY b.biblio_id
+                ORDER BY b.last_update DESC
+                LIMIT 30";
+
+        $query = $this->db->query($sql);
+        $results = [];
+
+        if ($query) {
+            while ($data = $query->fetch_assoc()) {
+                $results[] = [
+                    'biblio_id'    => $data['biblio_id'],
+                    'title'        => $data['title'],
+                    'author'       => $data['author'] ?: 'Autora Desconocida',
+                    'isbn_issn'    => $data['isbn_issn'],
+                    'image'        => $this->getImagePath($data['image']),
+                    'item_code'    => $data['item_code'],
+                    'is_available' => ((int)$data['active_loans'] === 0),
+                ];
+            }
+        }
+
+        parent::withJson($results);
+    }
 }

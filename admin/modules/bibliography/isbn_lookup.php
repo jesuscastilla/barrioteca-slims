@@ -55,10 +55,17 @@ if ($_SESSION['uid'] != 1) {
 // ============================================================================
 
 /**
- * Realiza una petición HTTP GET con manejo de errores
+ * Realiza una petición HTTP GET con manejo de errores.
+ * 
+ * Primero intenta con file_get_contents(). Si falla (por ejemplo si
+ * allow_url_fopen está desactivado en el NAS), intenta automáticamente
+ * con cURL como fallback.
  */
 function isbn_http_get($url, $timeout = 15)
 {
+    $response = null;
+
+    // --- Intento 1: file_get_contents ---
     $context = stream_context_create([
         'http' => [
             'method' => 'GET',
@@ -73,11 +80,43 @@ function isbn_http_get($url, $timeout = 15)
     ]);
 
     $response = @file_get_contents($url, false, $context);
-    if ($response === false) {
-        return null;
+    if ($response !== false) {
+        return $response;
     }
-    return $response;
+
+    // --- Intento 2: cURL (fallback) ---
+    if (function_exists('curl_version')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_USERAGENT => 'SLiMS-ISBN-Lookup/1.0',
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        ]);
+
+        $response = @curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response !== false && $httpCode >= 200 && $httpCode < 400) {
+            return $response;
+        }
+    }
+
+    return null;
 }
+
+/**
+ * Clave de API de Google Books (opcional pero recomendada)
+ * Se pasa como parámetro key=API_KEY en la URL.
+ * Obtén tu clave en: https://console.cloud.google.com/apis/library/books.googleapis.com
+ * Sin API Key, Google Books tiene un límite muy bajo de peticiones (HTTP 429).
+ */
+define('GOOGLE_BOOKS_API_KEY', 'REEMPLAZA_CON_TU_CLAVE');
 
 /**
  * Consulta Google Books API por ISBN
@@ -87,6 +126,9 @@ function queryGoogleBooks($isbn)
 {
     $isbn = preg_replace('/[^0-9X]/i', '', $isbn);
     $url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' . urlencode($isbn) . '&langRestrict=es&maxResults=5';
+    if (defined('GOOGLE_BOOKS_API_KEY') && GOOGLE_BOOKS_API_KEY !== '') {
+        $url .= '&key=' . GOOGLE_BOOKS_API_KEY;
+    }
 
     $response = isbn_http_get($url);
     if (!$response) return [];
@@ -279,20 +321,8 @@ function queryISBNSpain($isbn)
     $isbn = preg_replace('/[^0-9X]/i', '', $isbn);
     $url = 'https://www.cultura.gob.es/webISBN/tituloSimpleFilter.do?cache=init&prev_layout=busquedaisbn&layout=busquedaisbn&language=es&searchType=2&resultados=&isbn=' . urlencode($isbn);
 
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'header' => "Accept: text/html\r\nUser-Agent: Mozilla/5.0 (compatible; SLiMS-ISBN-Lookup/1.0)\r\n",
-            'timeout' => 15,
-            'ignore_errors' => true,
-        ],
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-        ],
-    ]);
-
-    $response = @file_get_contents($url, false, $context);
+    // Usamos isbn_http_get que tiene fallback a cURL
+    $response = isbn_http_get($url, 20);
     if (!$response) return [];
 
     // Intentar parsear la respuesta HTML del Ministerio
@@ -301,7 +331,7 @@ function queryISBNSpain($isbn)
     // Buscar enlace al detalle del libro
     if (preg_match('/tituloDetalle\.do[^"]*/', $response, $detailMatch)) {
         $detailUrl = 'https://www.cultura.gob.es/webISBN/' . html_entity_decode($detailMatch[0]);
-        $detailResponse = @file_get_contents($detailUrl, false, $context);
+        $detailResponse = isbn_http_get($detailUrl, 20);
 
         if ($detailResponse) {
             $result = [
@@ -322,62 +352,152 @@ function queryISBNSpain($isbn)
                 'classification' => '',
             ];
 
-            // Extraer título
-            if (preg_match('/<span[^>]*class="[^"]*isbnField[^"]*"[^>]*>T[ií]tulo<\/span>\s*<\/div>\s*<div[^>]*>\s*<span[^>]*>([^<]+)/si', $detailResponse, $m)) {
-                $result['title'] = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
-            } elseif (preg_match('/T[ií]tulo[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                $result['title'] = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
-            }
-
-            // Extraer autor(es)
-            if (preg_match_all('/Autor(?:es)?[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                foreach ($m[1] as $author) {
-                    $author = trim(html_entity_decode($author, ENT_QUOTES, 'UTF-8'));
-                    if ($author && $author !== '-') {
-                        $result['authors'][] = $author;
+            // Extraer título — patrón más flexible para el HTML actual del Ministerio
+            // Busca "Título" seguido de algún contenido en un span/div cercano
+            $titlePatterns = [
+                '/<span[^>]*class="[^"]*isbnField[^"]*"[^>]*>T[ií]tulo<\/span>\s*<\/div>\s*<div[^>]*>\s*<span[^>]*>([^<]+)/si',
+                '/T[ií]tulo[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>T[ií]tulo[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>T[ií]tulo<\/th>\s*<td[^>]*>([^<]+)/si',
+                '/T[ií]tulo[^:]*:<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/(?:T[ií]tulo|Title)\s*[:|]\s*([^<\n]+)/si',
+            ];
+            foreach ($titlePatterns as $pattern) {
+                if (preg_match($pattern, $detailResponse, $m)) {
+                    $title = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+                    if (!empty($title)) {
+                        $result['title'] = $title;
+                        break;
                     }
                 }
             }
 
-            // Extraer editorial
-            if (preg_match('/Editorial[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                $result['publisher'] = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
-            }
-
-            // Extraer fecha de publicación
-            if (preg_match('/Fecha\s*(?:de\s*)?(?:Publicaci[oó]n|Edici[oó]n)[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                $dateStr = trim($m[1]);
-                if (preg_match('/(\d{4})/', $dateStr, $yearMatch)) {
-                    $result['publish_year'] = $yearMatch[1];
+            // Si no se encontró con patrones específicos, buscar en tablas
+            if (empty($result['title'])) {
+                if (preg_match('/<td[^>]*>\s*(\d{13})\s*<\/td>\s*<td[^>]*>\s*<a[^>]*>([^<]+)/si', $detailResponse, $m)) {
+                    $result['title'] = trim(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8'));
                 }
             }
 
-            // Extraer número de páginas
-            if (preg_match('/P[aá]ginas[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                $result['pages'] = trim($m[1]) . ' p.';
+            // Extraer autor(es) — patrones más flexibles
+            $authorPatterns = [
+                '/Autor(?:es)?[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>Autor(?:es)?[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>Autor(?:es)?<\/th>\s*<td[^>]*>([^<]+)/si',
+                '/Autor(?:es)?[^:]*:<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+            ];
+            foreach ($authorPatterns as $pattern) {
+                if (preg_match_all($pattern, $detailResponse, $m)) {
+                    $found = false;
+                    foreach ($m[1] as $author) {
+                        $author = trim(html_entity_decode($author, ENT_QUOTES, 'UTF-8'));
+                        if ($author && $author !== '-') {
+                            $result['authors'][] = $author;
+                            $found = true;
+                        }
+                    }
+                    if ($found) break;
+                }
+            }
+
+            // Extraer editorial — patrones más flexibles
+            $publisherPatterns = [
+                '/Editorial[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>Editorial[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>Editorial<\/th>\s*<td[^>]*>([^<]+)/si',
+                '/Editorial[^:]*:<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+            ];
+            foreach ($publisherPatterns as $pattern) {
+                if (preg_match($pattern, $detailResponse, $m)) {
+                    $publisher = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+                    if (!empty($publisher) && $publisher !== '-') {
+                        $result['publisher'] = $publisher;
+                        break;
+                    }
+                }
+            }
+
+            // Extraer año de publicación — patrones más flexibles
+            $yearPatterns = [
+                '/Fecha\s*(?:de\s*)?(?:Publicaci[oó]n|Edici[oó]n)[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>(?:A[ñn]o|Fecha)[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>(?:A[ñn]o|Fecha\s*(?:de\s*)?Publicaci[oó]n)<\/th>\s*<td[^>]*>([^<]+)/si',
+                '/(?:A[ñn]o|Fecha\s*(?:de\s*)?Publicaci[oó]n)[^:]*:<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+            ];
+            foreach ($yearPatterns as $pattern) {
+                if (preg_match($pattern, $detailResponse, $m)) {
+                    $dateStr = trim($m[1]);
+                    if (preg_match('/(\d{4})/', $dateStr, $yearMatch)) {
+                        $result['publish_year'] = $yearMatch[1];
+                        break;
+                    }
+                }
+            }
+
+            // Extraer páginas — patrones más flexibles
+            $pagesPatterns = [
+                '/P[aá]ginas[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>P[aá]ginas[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>P[aá]ginas<\/th>\s*<td[^>]*>([^<]+)/si',
+            ];
+            foreach ($pagesPatterns as $pattern) {
+                if (preg_match($pattern, $detailResponse, $m)) {
+                    $pages = trim($m[1]);
+                    if (!empty($pages) && $pages !== '-') {
+                        $result['pages'] = $pages . ' p.';
+                        break;
+                    }
+                }
             }
 
             // Extraer materia(s)
-            if (preg_match_all('/Materia[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                foreach ($m[1] as $subject) {
-                    $subject = trim(html_entity_decode($subject, ENT_QUOTES, 'UTF-8'));
-                    if ($subject && $subject !== '-') {
-                        $result['categories'][] = $subject;
+            $subjectPatterns = [
+                '/Materia[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>Materia[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>Materia<\/th>\s*<td[^>]*>([^<]+)/si',
+            ];
+            foreach ($subjectPatterns as $pattern) {
+                if (preg_match_all($pattern, $detailResponse, $m)) {
+                    foreach ($m[1] as $subject) {
+                        $subject = trim(html_entity_decode($subject, ENT_QUOTES, 'UTF-8'));
+                        if ($subject && $subject !== '-') {
+                            $result['categories'][] = $subject;
+                        }
                     }
+                    if (!empty($result['categories'])) break;
                 }
             }
 
             // Extraer edición
-            if (preg_match('/Edici[oó]n[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                $edition = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
-                if ($edition && $edition !== '-') {
-                    $result['edition'] = $edition;
+            $editionPatterns = [
+                '/Edici[oó]n[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>Edici[oó]n[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>Edici[oó]n<\/th>\s*<td[^>]*>([^<]+)/si',
+            ];
+            foreach ($editionPatterns as $pattern) {
+                if (preg_match($pattern, $detailResponse, $m)) {
+                    $edition = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+                    if ($edition && $edition !== '-') {
+                        $result['edition'] = $edition;
+                        break;
+                    }
                 }
             }
 
             // Extraer CDU/clasificación
-            if (preg_match('/CDU[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si', $detailResponse, $m)) {
-                $result['classification'] = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+            $classPatterns = [
+                '/CDU[^<]*<\/[^>]+>\s*<[^>]+>\s*<[^>]+>([^<]+)/si',
+                '/<span[^>]*class="[^"]*label[^"]*"[^>]*>CDU[^<]*<\/span>\s*<span[^>]*class="[^"]*value[^"]*"[^>]*>([^<]+)/si',
+                '/<th[^>]*>CDU<\/th>\s*<td[^>]*>([^<]+)/si',
+            ];
+            foreach ($classPatterns as $pattern) {
+                if (preg_match($pattern, $detailResponse, $m)) {
+                    $classification = trim(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'));
+                    if ($classification && $classification !== '-') {
+                        $result['classification'] = $classification;
+                        break;
+                    }
+                }
             }
 
             if (!empty($result['title'])) {

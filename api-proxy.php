@@ -31,7 +31,7 @@ header('Content-Type: application/json; charset=utf-8');
  * Configuración de la URL base de la API interna de SLiMS.
  * En el NAS Synology, esto suele ser la ruta local o el dominio configurado.
  */
-$SLIMS_API_BASE = 'http://localhost/acalenca-barrioteca/api/v1'; 
+$SLIMS_API_BASE = 'http://localhost/slims/api/v1'; 
 
 // Obtener la ruta solicitada al proxy
 $method = $_SERVER['REQUEST_METHOD'];

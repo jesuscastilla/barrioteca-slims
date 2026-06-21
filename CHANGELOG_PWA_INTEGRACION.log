@@ -1,46 +1,45 @@
-﻿================================================================================
-  CHANGELOG - Barrioteca Acalenca - Integracion PWA <-> SLiMS
+﻿===============================================================================
+  CHANGELOG - Barrioteca Acalencá - Integración PWA <-> SLiMS
   Fecha     : 2026-06-13
-  Autor     : Antigravity (asistente AI)
-  Version   : v0.2.0 -> v0.3.0
-================================================================================
+  Versión   : v0.2.0 -> v0.3.0
+===============================================================================
 
 RESUMEN
 -------
-Correccion de la comunicacion entre la PWA (acalenca-barrioteca-app) y el
-backend SLiMS (acalenca-barrioteca). Los endpoints de circulacion existian
+Corrección de la comunicación entre la PWA (acalenca-barrioteca-app) y el
+backend SLiMS (acalenca-barrioteca). Los endpoints de circulación existían
 implementados pero nunca estaban registrados en el router de SLiMS, por lo que
 todas las llamadas de la PWA resultaban en HTTP 404.
 
-================================================================================
-BUG #1 - CRITICO - Rutas de circulacion no registradas en SLiMS
-================================================================================
+===============================================================================
+BUG #1 - CRÍTICO - Rutas de circulación no registradas en SLiMS
+===============================================================================
 
 Archivo   : acalenca-barrioteca/api/v1/routes.php
-Sintoma   : HTTP 404 en todos los endpoints de circulacion (verificar socia,
-            prestamo, devolucion, estado de item).
-Causa     : CirculationController.php existia implementado pero no se hacia
-            require() de el ni se registraban sus rutas en el router.
+Síntoma   : HTTP 404 en todos los endpoints de circulación (verificar socia,
+            préstamo, devolución, estado de ítem).
+Causa     : CirculationController.php existía implementado pero no se hacía
+            require() de él ni se registraban sus rutas en el router.
 
 ANTES:
 ------
   require __DIR__ . '/controllers/LoanController.php';
   // CirculationController.php -> NO incluido
 
-DESPUES:
+DESPUÉS:
 --------
   require __DIR__ . '/controllers/LoanController.php';
-  require __DIR__ . '/controllers/CirculationController.php';  <- ANADIDO
+  require __DIR__ . '/controllers/CirculationController.php';  <- AÑADIDO
 
-================================================================================
-BUG #2 - CRITICO - Rutas de la PWA no expuestas por el router
-================================================================================
+===============================================================================
+BUG #2 - CRÍTICO - Rutas de la PWA no expuestas por el router
+===============================================================================
 
 Archivo   : acalenca-barrioteca/api/v1/routes.php
-Sintoma   : HTTP 404 en los 4 endpoints que consume server.ts de la PWA.
+Síntoma   : HTTP 404 en los 4 endpoints que consume server.ts de la PWA.
 Causa     : Las rutas simplemente no estaban registradas.
 
-ANADIDAS las siguientes rutas:
+AÑADIDAS las siguientes rutas:
 -------------------------------
   GET  /member/{member_id}/verify  -> CirculationController@verifyMember
   GET  /item/{isbn}/status         -> CirculationController@getItemStatus
@@ -48,15 +47,15 @@ ANADIDAS las siguientes rutas:
   POST /loan/return                -> CirculationController@returnLoan
   GET  /biblio/search              -> BiblioController@search
 
-================================================================================
-BUG #3 - CRITICO - Metodo search() inexistente en BiblioController
-================================================================================
+===============================================================================
+BUG #3 - CRÍTICO - Método search() inexistente en BiblioController
+===============================================================================
 
 Archivo   : acalenca-barrioteca/api/v1/controllers/BiblioController.php
-Sintoma   : HTTP 500/404 al buscar en el catalogo desde la PWA.
-Causa     : El metodo search() no existia.
+Síntoma   : HTTP 500/404 al buscar en el catálogo desde la PWA.
+Causa     : El método search() no existía.
 
-ANADIDO nuevo metodo public search():
+AÑADIDO nuevo método public search():
 --------------------------------------
   - Busca en title, author e isbn_issn con LIKE
   - LEFT JOIN con item y loan para calcular is_available
@@ -64,82 +63,71 @@ ANADIDO nuevo metodo public search():
   - Campos de respuesta: biblio_id, title, author, isbn_issn,
                          image, item_code, is_available
 
-================================================================================
+===============================================================================
 ESTADO DE LA API RESULTANTE
-================================================================================
+===============================================================================
 
   Base URL: https://pelotxo.synology.me/acalenca-barrioteca/api/v1
 
-  Endpoint                       Metodo  Controlador                   Estado
+  Endpoint                       Método  Controlador                   Estado
   ------------------------------ ------  ----------------------------  ------
-  /                              GET     HomeController@index          OK (existia)
-  /biblio/popular                GET     BiblioController@getPopular   OK (existia)
-  /biblio/latest                 GET     BiblioController@getLatest    OK (existia)
+  /                              GET     HomeController@index          OK (existía)
+  /biblio/popular                GET     BiblioController@getPopular   OK (existía)
+  /biblio/latest                 GET     BiblioController@getLatest    OK (existía)
   /biblio/search                 GET     BiblioController@search       NUEVO
-  /biblio/total/all              GET     BiblioController@getTotalAll  OK (existia)
-  /subject/popular               GET     SubjectController@getPopular  OK (existia)
-  /subject/latest                GET     SubjectController@getLatest   OK (existia)
-  /member/top                    GET     MemberController@getTopMember OK (existia)
+  /biblio/total/all              GET     BiblioController@getTotalAll  OK (existía)
+  /subject/popular               GET     SubjectController@getPopular  OK (existía)
+  /subject/latest                GET     SubjectController@getLatest   OK (existía)
+  /member/top                    GET     MemberController@getTopMember OK (existía)
   /member/{id}/verify            GET     CirculationController         NUEVO
-  /item/total/all                GET     ItemController@getTotalAll    OK (existia)
-  /item/total/lent               GET     ItemController@getTotalLent   OK (existia)
-  /item/total/available          GET     ItemController@getTotalAvail  OK (existia)
+  /item/total/all                GET     ItemController@getTotalAll    OK (existía)
+  /item/total/lent               GET     ItemController@getTotalLent   OK (existía)
+  /item/total/available          GET     ItemController@getTotalAvail  OK (existía)
   /item/{isbn}/status            GET     CirculationController         NUEVO
-  /loan/summary                  GET     LoanController@getSummary     OK (existia)
-  /loan/getdate/{start_date}     GET     LoanController@getDate        OK (existia)
-  /loan/summary/{date}           GET     LoanController@getSummaryDate OK (existia)
+  /loan/summary                  GET     LoanController@getSummary     OK (existía)
+  /loan/getdate/{start_date}     GET     LoanController@getDate        OK (existía)
+  /loan/summary/{date}           GET     LoanController@getSummaryDate OK (existía)
   /loan/borrow                   POST    CirculationController         NUEVO
   /loan/return                   POST    CirculationController         NUEVO
 
-================================================================================
-FLUJO COMPLETO PWA <-> SLiMS (verificado logicamente)
-================================================================================
+===============================================================================
+FLUJO COMPLETO PWA <-> SLiMS (verificado lógicamente)
+===============================================================================
 
-  1. INICIO DE SESION DE SOCIA
+  1. INICIO DE SESIÓN DE SOCIA
      PWA -> POST /api/verify-member { member_id }
        -> server.ts -> GET SLiMS /member/{id}/verify   <- AHORA FUNCIONA
        <- SLiMS -> { status: "success", data: { member_name, ... } }
 
-  2. PRESTAMO DE LIBRO
+  2. PRÉSTAMO DE LIBRO
      PWA -> POST /api/perform-action { accion: "prestamo", asin, id_socia }
        -> server.ts normaliza -> POST SLiMS /loan/borrow { member_id, item_code } <- AHORA FUNCIONA
        <- SLiMS -> { status: "success", data: { loan_id, due_date, ... } }
 
-  3. DEVOLUCION DE LIBRO
+  3. DEVOLUCIÓN DE LIBRO
      PWA -> POST /api/perform-action { accion: "devolucion", asin }
        -> server.ts normaliza -> POST SLiMS /loan/return { item_code }  <- AHORA FUNCIONA
        <- SLiMS -> { status: "success", data: { loan_id, return_date, ... } }
 
-  4. BUSQUEDA EN CATALOGO
-     PWA -> GET /api/catalog-proxy?q={termino}
-       -> server.ts -> GET SLiMS /biblio/search?q={termino}  <- AHORA FUNCIONA
+  4. BÚSQUEDA EN CATÁLOGO
+     PWA -> GET /api/catalog-proxy?q={término}
+       -> server.ts -> GET SLiMS /biblio/search?q={término}  <- AHORA FUNCIONA
        <- SLiMS -> [{ title, author, isbn, is_available, ... }]
 
-================================================================================
+===============================================================================
 ARCHIVOS MODIFICADOS
-================================================================================
+===============================================================================
 
   1. acalenca-barrioteca/api/v1/routes.php
-     - Anadido: require CirculationController.php
-     - Anadidas: 5 rutas nuevas para la PWA
+     - Añadido: require CirculationController.php
+     - Añadidas: 5 rutas nuevas para la PWA
 
   2. acalenca-barrioteca/api/v1/controllers/BiblioController.php
-     - Anadido: metodo public search()
+     - Añadido: método public search()
 
   Los archivos de la PWA (acalenca-barrioteca-app) NO han sido modificados.
-  Los bugs estaban integros en el backend SLiMS.
+  Los bugs estaban íntegros en el backend SLiMS.
 
-================================================================================
-PROXIMOS PASOS RECOMENDADOS
-================================================================================
-
-  [ ] Desplegar en el NAS Synology (git pull o subida por SFTP)
-  [ ] Verificar: GET https://pelotxo.synology.me/acalenca-barrioteca/api/v1/
-  [ ] Test socia:      GET .../member/SOCIA-001/verify
-  [ ] Test busqueda:   GET .../biblio/search?q=Allende
-  [ ] Test prestamo:   POST .../loan/borrow { "member_id":"X", "item_code":"Y" }
-  [ ] Test devolucion: POST .../loan/return { "item_code": "Y" }
-
-================================================================================
+===============================================================================
 FIN DEL REGISTRO
-================================================================================
+===============================================================================

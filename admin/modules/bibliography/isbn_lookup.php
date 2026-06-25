@@ -115,8 +115,26 @@ function isbn_http_get($url, $timeout = 15)
  * Se pasa como parámetro key=API_KEY en la URL.
  * Obtén tu clave en: https://console.cloud.google.com/apis/library/books.googleapis.com
  * Sin API Key, Google Books tiene un límite muy bajo de peticiones (HTTP 429).
+ * 
+ * ⚠️ No hardcodees la clave aquí. Una forma más segura es definirla como variable
+ * de entorno GOOGLE_BOOKS_API_KEY en el servidor (Apache/Nginx), o crea un archivo
+ * .env en la raíz de SLiMS con: GOOGLE_BOOKS_API_KEY=tu_clave
  */
-define('GOOGLE_BOOKS_API_KEY', 'REEMPLAZA_CON_TU_CLAVE');
+$google_api_key = getenv('GOOGLE_BOOKS_API_KEY');
+if (empty($google_api_key)) {
+    // Fallback: intentar cargar desde archivo .env en la raíz
+    $envFile = __DIR__ . '/../../../.env';
+    if (file_exists($envFile)) {
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (strpos(trim($line), 'GOOGLE_BOOKS_API_KEY=') === 0) {
+                $google_api_key = trim(substr($line, strpos($line, '=') + 1));
+                break;
+            }
+        }
+    }
+}
+define('GOOGLE_BOOKS_API_KEY', $google_api_key ?: '');
 
 /**
  * Consulta Google Books API por ISBN

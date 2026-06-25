@@ -252,9 +252,24 @@ header('Content-Type: text/html; charset=utf-8');
             <table>
                 <tr><th>Prueba</th><th>Resultado</th><th>Detalle</th></tr>
                 <?php
-                // 1. Google Books API (con API Key para evitar límite de peticiones)
-                $google_api_key = 'REEMPLAZA_CON_TU_CLAVE';
-                $url_gb = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' . urlencode($isbn_prueba) . '&langRestrict=es&maxResults=1&key=' . $google_api_key;
+                // 1. Google Books API (con API Key desde variable de entorno o .env)
+                $google_api_key = getenv('GOOGLE_BOOKS_API_KEY');
+                if (empty($google_api_key)) {
+                    $envFile = __DIR__ . '/.env';
+                    if (file_exists($envFile)) {
+                        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                        foreach ($lines as $line) {
+                            if (strpos(trim($line), 'GOOGLE_BOOKS_API_KEY=') === 0) {
+                                $google_api_key = trim(substr($line, strpos($line, '=') + 1));
+                                break;
+                            }
+                        }
+                    }
+                }
+                $url_gb = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' . urlencode($isbn_prueba) . '&langRestrict=es&maxResults=1';
+                if (!empty($google_api_key)) {
+                    $url_gb .= '&key=' . $google_api_key;
+                }
                 $resp_gb = probar_url($url_gb, 'Google Books API', $timeout);
 
                 if ($resp_gb) {

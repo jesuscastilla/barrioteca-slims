@@ -40,6 +40,10 @@ $base_path = dirname($_SERVER['PHP_SELF']);
 $path = str_replace($base_path . '/api-proxy.php', '', $request_uri);
 $path = explode('?', $path)[0];
 
+// Si la ruta empieza con /api, quitarlo para que coincida con el mapeo
+// (compatibilidad con frontend que llama a /api/verify-member)
+$path = preg_replace('#^/api#', '', $path);
+
 // Leer datos de entrada (JSON o POST tradicional)
 $input_data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 

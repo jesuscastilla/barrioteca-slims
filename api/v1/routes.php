@@ -16,7 +16,7 @@ if ((isset($header['SLiMS-Http-Cache']) || isset($header['slims-http-cache']))) 
 }
 
 /*----------  Require dependencies  ----------*/
-require 'lib/router.inc.php';
+require SB . 'lib/router.inc.php';
 require __DIR__ . '/controllers/HomeController.php';
 require __DIR__ . '/controllers/BiblioController.php';
 require __DIR__ . '/controllers/MemberController.php';

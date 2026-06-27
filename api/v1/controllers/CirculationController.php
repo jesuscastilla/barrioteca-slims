@@ -41,8 +41,8 @@ class CirculationController extends Controller
         try {
             // Consultar la tabla member para verificar existencia
             $query = $this->db->query("
-                SELECT m.member_id, m.member_name, m.member_type_id, m.expire_date, 
-                       mt.member_type_name, m.member_status
+                SELECT m.member_id, m.member_name, m.member_type_id, m.expire_date,
+                       mt.member_type_name
                 FROM member m
                 LEFT JOIN mst_member_type mt ON m.member_type_id = mt.member_type_id
                 WHERE m.member_id = '" . $this->db->real_escape_string($member_id) . "'
@@ -65,8 +65,7 @@ class CirculationController extends Controller
                         'member_name' => $member['member_name'],
                         'member_type' => $member['member_type_name'],
                         'expire_date' => $member['expire_date'],
-                        'is_expired' => $is_expired,
-                        'member_status' => $member['member_status']
+                        'is_expired' => $is_expired
                     ]
                 ]);
             } else {

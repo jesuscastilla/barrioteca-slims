@@ -30,8 +30,18 @@ header('Content-Type: application/json; charset=utf-8');
 /**
  * Configuración de la URL base de la API interna de SLiMS.
  * En el NAS Synology, esto suele ser la ruta local o el dominio configurado.
+ *
+ * NOTA: Usamos /slims/api/index.php/ en lugar de /slims/api/v1/
+ * para que funcione con Nginx SIN necesidad de reglas de reescritura.
+ * PHP recibe PATH_INFO automáticamente cuando la URL apunta a un
+ * archivo real (index.php) seguido de una subruta (/v1/...).
  */
-$SLIMS_API_BASE = 'http://localhost/slims/api/v1'; 
+$SLIMS_API_BASE = 'http://localhost/slims/api/index.php';
+
+// ─── CLAVE DE API DE GOOGLE BOOKS (OPCIONAL) ──────────
+define('GOOGLE_BOOKS_API_KEY', '');
+// ⬆️  PON TU CLAVE AQUÍ entre las comillas simples
+// ──────────────────────────────────────────────────────
 
 // Obtener la ruta solicitada al proxy
 $method = $_SERVER['REQUEST_METHOD'];
@@ -72,14 +82,12 @@ if (!$target_url) {
 }
 
 // Ejecutar la petición a la API interna usando cURL
+// IMPORTANTE: Siempre usamos GET aunque el frontend envíe POST,
+// porque las rutas de la API de SLiMS están registradas como GET.
+// Los parámetros van en la URL, no en el cuerpo de la petición.
 $ch = curl_init($target_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-if ($method == 'POST') {
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($input_data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-}
 
 $response = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

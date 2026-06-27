@@ -31,6 +31,7 @@ $menu['bibliography.header-items'] = array('Header', __('ITEMS'));
 $menu['bibliography.item-list'] = array(__('Item List'), MWB.'bibliography/item.php', __('Show List of Library Items'));
 $menu['bibliography.checkout-items'] = array(__('Checkout Items'), MWB.'bibliography/checkout_item.php', __('Show List of Checkout Items'));
 $menu['bibliography.header-copy-cataloguing'] = array('Header', __('COPY CATALOGUING'));
+$menu['bibliography.isbn-lookup'] = array(__('ISBN Lookup'), MWB.'bibliography/isbn_lookup.php', __('Catalogar libros automáticamente mediante ISBN (Google Books, Open Library, BNE)'));
 $menu['bibliography.marc-sru'] = array(__('MARC SRU'), MWB.'bibliography/marcsru.php', __('Grab Bibliographic Data from Other MARC Services'));
 $menu['bibliography.z3950-sru'] = array(__('Z3950 SRU'), MWB.'bibliography/z3950sru.php', __('Grab Bibliographic Data from Z3950 SRU Web Services'));
 //$menu['bibliography.z3950-service'] = array(__('Z3950 Service'), MWB.'bibliography/z3950.php', __('Grab Bibliographic Data from Z3950 Web Services'));

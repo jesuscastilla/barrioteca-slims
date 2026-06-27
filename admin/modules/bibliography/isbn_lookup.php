@@ -65,8 +65,9 @@ function isbn_http_get($url, $timeout = 15)
 {
     $response = null;
 
-    // --- Intento 1: file_get_contents ---
-    $context = stream_context_create([
+    // --- Intento 1: file_get_contents (solo si hay wrapper HTTPS) ---
+    if (in_array('https', stream_get_wrappers())) {
+        $context = stream_context_create([
         'http' => [
             'method' => 'GET',
             'header' => "Accept: application/json\r\nUser-Agent: SLiMS-ISBN-Lookup/1.0\r\n",
@@ -79,9 +80,10 @@ function isbn_http_get($url, $timeout = 15)
         ],
     ]);
 
-    $response = @file_get_contents($url, false, $context);
-    if ($response !== false) {
-        return $response;
+        $response = @file_get_contents($url, false, $context);
+        if ($response !== false) {
+            return $response;
+        }
     }
 
     // --- Intento 2: cURL (fallback) ---
@@ -536,19 +538,40 @@ function downloadCoverImage($url, $isbn)
 
     $url = str_replace('http://', 'https://', $url);
 
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'header' => "User-Agent: SLiMS-ISBN-Lookup/1.0\r\n",
-            'timeout' => 10,
-        ],
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-        ],
-    ]);
+    $imageData = null;
 
-    $imageData = @file_get_contents($url, false, $context);
+    // Try file_get_contents if HTTPS wrapper is available
+    if (in_array('https', stream_get_wrappers())) {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => "User-Agent: SLiMS-ISBN-Lookup/1.0\r\n",
+                'timeout' => 10,
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+        ]);
+        $imageData = @file_get_contents($url, false, $context);
+    }
+
+    // Fallback to cURL if file_get_contents failed
+    if (empty($imageData) && function_exists('curl_version')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_USERAGENT => 'SLiMS-ISBN-Lookup/1.0'
+        ]);
+        $imageData = @curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpCode >= 400) $imageData = null;
+    }
+
     if (!$imageData || strlen($imageData) < 1000) return null;
 
     // Detectar tipo de imagen
@@ -608,18 +631,23 @@ function searchAllSources($isbn, $sources = ['google', 'openlibrary', 'isbn_spai
 // OPERACIÓN DE GUARDADO DE REGISTROS
 // ============================================================================
 
-if (isset($_POST['saveISBN']) && isset($_SESSION['isbn_results'])) {
-    require MDLBS . 'bibliography/biblio_utils.inc.php';
+if (isset($_POST['saveISBN'])) {
+    try {
+        if (!isset($_SESSION['isbn_results'])) {
+            throw new Exception('La sesion ha expirado. Realice la busqueda de nuevo.');
+        }
 
-    $gmd_cache = [];
-    $publ_cache = [];
-    $place_cache = [];
-    $lang_cache = [];
-    $author_cache = [];
-    $subject_cache = [];
+        require MDLBS . 'bibliography/biblio_utils.inc.php';
 
-    $sql_op = new simbio_dbop($dbs);
-    $r = 0;
+        $gmd_cache = [];
+        $publ_cache = [];
+        $place_cache = [];
+        $lang_cache = [];
+        $author_cache = [];
+        $subject_cache = [];
+
+        $sql_op = new simbio_dbop($dbs);
+        $r = 0;
 
     foreach ($_POST['zrecord'] as $id) {
         $record = $_SESSION['isbn_results'][$id] ?? null;
@@ -778,6 +806,10 @@ if (isset($_POST['saveISBN']) && isset($_SESSION['isbn_results'])) {
 
     echo json_encode(['success' => true, 'count' => $r]);
     exit();
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit();
+    }
 }
 
 // ============================================================================
@@ -896,7 +928,7 @@ if (isset($_GET['keywords']) && $can_read) {
     <script>
         $('.save').on('click', function (e) {
             var zrecord = {};
-            var uri = '<?php echo $_SERVER['PHP_SELF']; ?>';
+            var uri = '<?php echo MWB; ?>bibliography/isbn_lookup.php';
             $("input[type=checkbox]:checked").each(function() {
                 zrecord[$(this).val()] = $(this).val();
             });
@@ -917,11 +949,12 @@ if (isset($_GET['keywords']) && $can_read) {
                     parent.toastr.success(response.count + " <?php echo __('registro(s) guardado(s) en la base de datos'); ?>", "ISBN Lookup");
                     parent.jQuery('#mainContent').simbioAJAX(uri);
                 } else {
-                    parent.toastr.error("<?php echo __('Error al guardar los registros'); ?>", "ISBN Lookup");
+                    parent.toastr.error(response.error || "<?php echo __('Error al guardar los registros'); ?>", "ISBN Lookup");
                 }
             })
-            .fail(function () {
-                parent.toastr.error("<?php echo __('Error de conexión al guardar'); ?>", "ISBN Lookup");
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                parent.toastr.error("Error (" + jqXHR.status + "): " + (jqXHR.responseText || errorThrown || "<?php echo __('Error de conexión al guardar'); ?>"), "ISBN Lookup");
+                console.error("Save error:", jqXHR.responseText, textStatus, errorThrown);
             });
         });
 

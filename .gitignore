@@ -58,3 +58,26 @@ tarsius
 
 .env
 .htaccess
+
+# Backups y migraciones (contienen datos personales)
+*.bak
+*.txt
+
+# Logs de desarrollo
+*.log
+
+# Scripts de diagnóstico (contienen rutas e ISBNs)
+diagnostico_isbn.php
+CHANGELOG_*.log
+
+# Proxy obsoleto (el real está en la PWA)
+api-proxy.php
+
+# Composer lock (privado)
+composer.lock
+
+# Docker development files
+docker-compose.yml
+Dockerfile
+entrypoint.sh
+.dockerignore

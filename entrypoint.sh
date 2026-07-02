@@ -29,7 +29,7 @@ return [
         'SLiMS' => [
             'host' => '${DB_HOST}',
             'database' => '${DB_NAME}',
-            'port' => ${DB_PORT},
+            'port' => '${DB_PORT}',
             'username' => '${DB_USER}',
             'password' => '${DB_PASS}',
             'options' => [

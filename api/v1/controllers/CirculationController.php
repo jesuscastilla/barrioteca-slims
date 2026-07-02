@@ -103,10 +103,13 @@ class CirculationController extends Controller
             // Buscar el item por ISBN o item_code
             $query = $this->db->query("
                 SELECT i.item_code, i.item_status_id, i.coll_type_id, i.call_number,
-                       b.biblio_id, b.title, b.isbn_issn, b.author, b.publisher,
+                       b.biblio_id, b.title, b.isbn_issn, b.publisher,
+                       COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), 'Autora Desconocida') AS author,
                        COUNT(DISTINCT CASE WHEN l.is_return = 0 THEN l.loan_id END) as active_loans
                 FROM item i
                 LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
+                LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id
+                LEFT JOIN mst_author a ON ba.author_id = a.author_id
                 LEFT JOIN loan l ON i.item_code = l.item_code
                 WHERE i.item_code = '" . $this->db->real_escape_string($isbn) . "' 
                    OR b.isbn_issn = '" . $this->db->real_escape_string($isbn) . "'

@@ -46,6 +46,3 @@ La PWA ha sido feminizada y preparada para funcionar de manera óptima.
 2.  Crea un **Servicio Web** de tipo "Script PHP" para SLiMS.
 3.  Si quieres usar HTTPS (necesario para instalar la PWA en el móvil), configura un certificado Let's Encrypt en el NAS y asígnalo a los portales web creados.
 
----
-*Feminización aplicada en todo el proyecto: Socia, Autora, Bienvenida.*
-*Eliminada toda referencia a Docker y agentes de IA.*

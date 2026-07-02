@@ -158,6 +158,7 @@ class BiblioController extends Controller
                     COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), 'Autora Desconocida') AS author,
                     b.isbn_issn,
                     b.image,
+                    b.notes,
                     MIN(i.item_code) AS item_code,
                     SUM(CASE WHEN l.is_return = 0 AND l.loan_id IS NOT NULL THEN 1 ELSE 0 END) AS active_loans
                 FROM biblio b
@@ -186,6 +187,7 @@ class BiblioController extends Controller
                     'author'       => $data['author'] ?: 'Autora Desconocida',
                     'isbn_issn'    => $data['isbn_issn'],
                     'image'        => $this->getImagePath($data['image']),
+                    'notes'        => $data['notes'] ?? '',
                     'item_code'    => $data['item_code'],
                     'is_available' => ((int)$data['active_loans'] === 0),
                 ];

@@ -155,7 +155,7 @@ class BiblioController extends Controller
         $sql = "SELECT
                     b.biblio_id,
                     b.title,
-                    b.author,
+                    COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), 'Autora Desconocida') AS author,
                     b.isbn_issn,
                     b.image,
                     MIN(i.item_code) AS item_code,
@@ -163,11 +163,13 @@ class BiblioController extends Controller
                 FROM biblio b
                 LEFT JOIN item i ON b.biblio_id = i.biblio_id
                 LEFT JOIN loan l ON i.item_code = l.item_code
+                LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id
+                LEFT JOIN mst_author a ON ba.author_id = a.author_id
                 WHERE
                     b.opac_hide < 1 AND (
-                        b.title    LIKE '%{$safe_q}%' OR
-                        b.author   LIKE '%{$safe_q}%' OR
-                        b.isbn_issn LIKE '%{$safe_q}%'
+                        b.title        LIKE '%{$safe_q}%' OR
+                        a.author_name  LIKE '%{$safe_q}%' OR
+                        b.isbn_issn    LIKE '%{$safe_q}%'
                     )
                 GROUP BY b.biblio_id
                 ORDER BY b.last_update DESC

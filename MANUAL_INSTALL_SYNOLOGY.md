@@ -55,4 +55,3 @@ La PWA se comunica con SLiMS a través de un proxy PHP.
 
 1. Accede a `https://TU-DOMINIO.synology.me/slims/install/` para verificar que SLiMS está accesible.
 2. Accede a `https://TU-DOMINIO.synology.me/barrioteca/` para verificar que la PWA carga.
-3. Ejecuta las pruebas de conectividad subiendo `test-slims.php` a la carpeta de la PWA (ver documentación de la PWA).

@@ -24,7 +24,7 @@ La barrioteca se organiza de forma vecinal y horizontal:
 ### Flujo completo
 
 ```
-Vecina se registra  →  Administradora crea la socia en SLiMS
+Vecina se asocia  →  Administradora crea la usuaria en SLiMS
                     →  Vecina recibe su ID (ej. SOCIA-001)
                     →  Abre la PWA, introduce su ID
                     →  Escanea el libro que quiere (ISBN/ASIN)

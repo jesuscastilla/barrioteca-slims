@@ -76,7 +76,7 @@ Consulta la [guía de instalación en Synology NAS](MANUAL_INSTALL_SYNOLOGY.md) 
 ## Créditos
 
 SLiMS es software libre creado originalmente por el equipo de desarrollo de Senayan (Indonesia).
-Esta instancia está modificada y mantenida por la Barrioteca Acalencá.
+Esta instancia está modificada y mantenida por la Barrioteca Acalencá, un espacio perteneciente a Lebeche, una asociación cultural y vecinal de Salobreña (Granada). Todo el código que se ha modificado ha sido por @pelochochi con mucho placer y dedicación. 
 
 ## Licencia
 

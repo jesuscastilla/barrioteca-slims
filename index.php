@@ -1,4 +1,10 @@
 <?php
+// Si hay parametros GET (login, member, etc), cargar el OPAC original completo
+if (!empty($_GET)) {
+    require __DIR__ . '/index_opac_original.php';
+    exit;
+}
+
 // Cargar configuracion minima de SLiMS para acceder a la BD
 define('INDEX_AUTH', '1');
 require 'sysconfig.inc.php';
@@ -46,7 +52,7 @@ if ($q) {
 <div class="topbar">
   <h1>Barrioteca Acalenca</h1>
   <div class="btns">
-    <a href="index.php?p=member" class="btn btn-member">Socias</a>
+    <a href="index.php?p=login" class="btn btn-member">Socias</a>
     <a href="admin/" class="btn btn-staff">Staff</a>
   </div>
 </div>

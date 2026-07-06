@@ -9,17 +9,21 @@ trait Image
 {
     function getImagePath($image, $path = 'docs')
     {
-        // cover images var
-        $thumb_url = '';
+        // Construir URL absoluta a SLiMS desde cualquier contexto (API o web)
+        // SWB puede ser /slims/ o /slims/api/ según dónde se cargue
+        $baseUrl = rtrim(SWB, '/');
+        // Si se cargó desde api/, subir un nivel para llegar a la raíz de SLiMS
+        if (str_ends_with($baseUrl, '/api')) {
+            $baseUrl = dirname($baseUrl);
+        }
+        $baseUrl .= '/';
+
         $image = urlencode($image??'');
         $images_loc = 'images/' . $path . '/' . $image;
-        $img_status = pathinfo('images/' . $path . '/' . $image);
-        if(isset($img_status['extension'])){
-            $thumb_url = './lib/minigalnano/createthumb.php?filename=' . urlencode($images_loc) . '&width=120';
-        }else{
-            $thumb_url = './lib/minigalnano/createthumb.php?filename=images/default/image.png&width=120';
+        $img_status = pathinfo(IMGBS . $path . '/' . ($image??''));
+        if(!empty($image) && isset($img_status['extension'])){
+            return $baseUrl . 'lib/minigalnano/createthumb.php?filename=' . urlencode($images_loc) . '&width=120';
         }
-
-        return $thumb_url;
+        return $baseUrl . 'lib/minigalnano/createthumb.php?filename=images/default/image.png&width=120';
     }
 }

@@ -10,7 +10,7 @@ SLiMS es el software de gestión bibliotecaria que usamos como backend. Aquí se
 - Los ejemplares y su estado (disponible / prestado)
 - El histórico de préstamos y devoluciones
 
-Sobre esta base de datos se apoya la que usan las socias desde el móvil. (https://github.com/jesuscastilla/acalenca-barrioteca-app)
+Sobre esta base de datos se apoya la aplicación (PWA) que usan las socias desde el móvil. (https://github.com/jesuscastilla/acalenca-barrioteca-app)
 
 ## Cómo funciona la autogestión
 

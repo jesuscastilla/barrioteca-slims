@@ -89,6 +89,51 @@ class CirculationController extends Controller
      * @param string $isbn ISBN o ASIN del libro
      * @return JSON con estado de disponibilidad
      */
+    /**
+     * Obtener los prestamos activos de una socia
+     * GET /api/v1/member/{id}/loans
+     */
+    public function getMemberLoans($member_id)
+    {
+        if (empty($member_id)) {
+            parent::withJson(['status' => 'error', 'message' => 'El ID de la socia es obligatorio.']);
+            return;
+        }
+
+        try {
+            $query = $this->db->query("
+                SELECT l.loan_id, l.item_code, l.loan_date, l.due_date, 
+                       b.title, b.author, b.isbn_issn, b.image
+                FROM loan l
+                LEFT JOIN item i ON l.item_code = i.item_code
+                LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
+                WHERE l.member_id = '" . $this->db->real_escape_string($member_id) . "' 
+                  AND l.is_return = 0
+                ORDER BY l.loan_date DESC
+            ");
+
+            $loans = [];
+            if ($query) {
+                while ($data = $query->fetch_assoc()) {
+                    $loans[] = [
+                        'loan_id'    => $data['loan_id'],
+                        'item_code'  => $data['item_code'],
+                        'loan_date' => $data['loan_date'],
+                        'due_date'  => $data['due_date'],
+                        'title'     => $data['title'] ?? 'Titulo no disponible',
+                        'author'    => $data['author'] ?? '',
+                        'isbn'     => $data['isbn_issn'] ?? '',
+                        'image'    => $data['image'] ?? '',
+                    ];
+                }
+            }
+
+            parent::withJson(['status' => 'success', 'data' => $loans]);
+        } catch (Exception $e) {
+            parent::withJson(['status' => 'error', 'message' => 'Error al consultar prestamos: ' . $e->getMessage()]);
+        }
+    }
+
     public function getItemStatus($isbn)
     {
         if (empty($isbn)) {

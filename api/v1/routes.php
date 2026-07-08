@@ -50,6 +50,7 @@ $router->map('GET', '/loan/summary/[*:date]', 'LoanController@getSummaryDate');
 
 /*----------  PWA Barrioteca Acalencá — Circulación  ----------*/
 $router->map('GET', '/member/[*:member_id]/verify', 'CirculationController@verifyMember');
+$router->map('GET', '/member/[*:member_id]/loans', 'CirculationController@getMemberLoans');
 $router->map('GET', '/item/[*:isbn]/status', 'CirculationController@getItemStatus');
 $router->map('POST', '/loan/borrow', 'CirculationController@createLoan');
 $router->map('POST', '/loan/return', 'CirculationController@returnLoan');

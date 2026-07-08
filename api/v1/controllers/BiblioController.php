@@ -151,6 +151,7 @@ class BiblioController extends Controller
         }
 
         $safe_q = $this->db->real_escape_string($q);
+        $limit = isset($_GET['_limit']) ? (int)$_GET['_limit'] : 30;
 
         $sql = "SELECT
                     b.biblio_id,
@@ -174,7 +175,7 @@ class BiblioController extends Controller
                     )
                 GROUP BY b.biblio_id
                 ORDER BY b.last_update DESC
-                LIMIT 30";
+                LIMIT {$limit}";
 
         $query = $this->db->query($sql);
         $results = [];

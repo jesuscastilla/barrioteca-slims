@@ -103,7 +103,7 @@ class CirculationController extends Controller
         try {
             $query = $this->db->query("
                 SELECT l.loan_id, l.item_code, l.loan_date, l.due_date, 
-                       b.title, b.author, b.isbn_issn, b.image
+                       b.title, b.isbn_issn, b.image
                 FROM loan l
                 LEFT JOIN item i ON l.item_code = i.item_code
                 LEFT JOIN biblio b ON i.biblio_id = b.biblio_id
@@ -116,14 +116,13 @@ class CirculationController extends Controller
             if ($query) {
                 while ($data = $query->fetch_assoc()) {
                     $loans[] = [
-                        'loan_id'    => $data['loan_id'],
-                        'item_code'  => $data['item_code'],
+                        'loan_id'   => $data['loan_id'],
+                        'item_code' => $data['item_code'],
                         'loan_date' => $data['loan_date'],
                         'due_date'  => $data['due_date'],
                         'title'     => $data['title'] ?? 'Titulo no disponible',
-                        'author'    => $data['author'] ?? '',
-                        'isbn'     => $data['isbn_issn'] ?? '',
-                        'image'    => $data['image'] ?? '',
+                        'isbn'      => $data['isbn_issn'] ?? '',
+                        'image'     => $data['image'] ?? '',
                     ];
                 }
             }

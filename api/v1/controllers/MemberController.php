@@ -13,6 +13,9 @@ class MemberController extends Controller
 
     use Image;
 
+    /**
+     * @var array
+     */
     protected $sysconf;
 
     /**
@@ -20,7 +23,7 @@ class MemberController extends Controller
      */
     protected $db;
 
-    function __construct($sysconf, $obj_db)
+    function __construct(array $sysconf, mysqli $obj_db)
     {
         $this->sysconf = $sysconf;
         $this->db = $obj_db;

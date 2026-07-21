@@ -236,18 +236,19 @@ class CirculationController extends Controller
                 return;
             }
             $item = $item_query->fetch_assoc();
+            $real_item_code = $item['item_code'];
 
-            // Verificar si ya está prestado
-            $active_loan_query = $this->db->query("SELECT loan_id FROM loan WHERE item_code = '" . $this->db->real_escape_string($item_code) . "' AND is_return = 0 LIMIT 1");
+            // Verificar si ya está prestado (usar el item_code real)
+            $active_loan_query = $this->db->query("SELECT loan_id FROM loan WHERE item_code = '" . $this->db->real_escape_string($real_item_code) . "' AND is_return = 0 LIMIT 1");
             if ($active_loan_query->num_rows > 0) {
                 parent::withJson(['status' => 'error', 'message' => 'El libro ya está prestado.']);
                 return;
             }
 
-            // Crear préstamo
+            // Crear préstamo con el item_code real
             $loan_date = date('Y-m-d');
             $due_date = date('Y-m-d', strtotime('+15 days'));
-            $insert_query = "INSERT INTO loan (item_code, member_id, loan_date, due_date, is_return, renewed, is_lent) VALUES ('" . $this->db->real_escape_string($item_code) . "', '" . $this->db->real_escape_string($member_id) . "', '$loan_date', '$due_date', 0, 0, 1)";
+            $insert_query = "INSERT INTO loan (item_code, member_id, loan_date, due_date, is_return, renewed, is_lent) VALUES ('" . $this->db->real_escape_string($real_item_code) . "', '" . $this->db->real_escape_string($member_id) . "', '$loan_date', '$due_date', 0, 0, 1)";
 
             if ($this->db->query($insert_query)) {
                 parent::withJson([
@@ -284,8 +285,18 @@ class CirculationController extends Controller
         }
 
         try {
-            // Buscar préstamo activo
-            $loan_query = $this->db->query("SELECT l.loan_id, l.member_id, l.due_date, m.member_name, b.title FROM loan l LEFT JOIN member m ON l.member_id = m.member_id LEFT JOIN item i ON l.item_code = i.item_code LEFT JOIN biblio b ON i.biblio_id = b.biblio_id WHERE l.item_code = '" . $this->db->real_escape_string($item_code) . "' AND l.is_return = 0 LIMIT 1");
+            // Buscar préstamo activo: buscar por item_code o por ISBN/ASIN
+            $safe_code = $this->db->real_escape_string($item_code);
+            $loan_query = $this->db->query("
+                SELECT l.loan_id, l.member_id, l.due_date, m.member_name, b.title, l.item_code
+                FROM loan l 
+                LEFT JOIN member m ON l.member_id = m.member_id 
+                LEFT JOIN item i ON l.item_code = i.item_code 
+                LEFT JOIN biblio b ON i.biblio_id = b.biblio_id 
+                WHERE (l.item_code = '{$safe_code}' OR b.isbn_issn = '{$safe_code}')
+                  AND l.is_return = 0 
+                LIMIT 1
+            ");
 
             if ($loan_query->num_rows == 0) {
                 parent::withJson(['status' => 'error', 'message' => 'El libro no consta como prestado actualmente.']);
@@ -293,6 +304,7 @@ class CirculationController extends Controller
             }
 
             $loan = $loan_query->fetch_assoc();
+            $real_item_code = $loan['item_code'];
             $return_date = date('Y-m-d');
             $update_query = "UPDATE loan SET is_return = 1, return_date = '$return_date' WHERE loan_id = " . (int)$loan['loan_id'];
 

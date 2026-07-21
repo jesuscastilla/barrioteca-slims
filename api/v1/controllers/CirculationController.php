@@ -8,6 +8,9 @@
 
 class CirculationController extends Controller
 {
+    /**
+     * @var array
+     */
     protected $sysconf;
 
     /**
@@ -15,7 +18,7 @@ class CirculationController extends Controller
      */
     protected $db;
 
-    function __construct($sysconf, $obj_db)
+    function __construct(array $sysconf, mysqli $obj_db)
     {
         $this->sysconf = $sysconf;
         $this->db = $obj_db;
@@ -26,9 +29,9 @@ class CirculationController extends Controller
      * GET /api/v1/member/{id}/verify
      * 
      * @param string $member_id ID de la socia
-     * @return JSON con estado de la socia
+     * @return void
      */
-    public function verifyMember($member_id)
+    public function verifyMember(string $member_id)
     {
         if (empty($member_id)) {
             parent::withJson([
@@ -83,17 +86,13 @@ class CirculationController extends Controller
     }
 
     /**
-     * Consultar disponibilidad de un libro por ISBN/ASIN o código de barras
-     * GET /api/v1/item/{isbn}/status
-     * 
-     * @param string $isbn ISBN o ASIN del libro
-     * @return JSON con estado de disponibilidad
-     */
-    /**
      * Obtener los prestamos activos de una socia
      * GET /api/v1/member/{id}/loans
+     *
+     * @param string $member_id ID de la socia
+     * @return void
      */
-    public function getMemberLoans($member_id)
+    public function getMemberLoans(string $member_id)
     {
         if (empty($member_id)) {
             parent::withJson(['status' => 'error', 'message' => 'El ID de la socia es obligatorio.']);
@@ -133,7 +132,14 @@ class CirculationController extends Controller
         }
     }
 
-    public function getItemStatus($isbn)
+    /**
+     * Consultar disponibilidad de un libro por ISBN/ASIN o código de barras
+     * GET /api/v1/item/{isbn}/status
+     *
+     * @param string $isbn ISBN o ASIN del libro
+     * @return void
+     */
+    public function getItemStatus(string $isbn)
     {
         if (empty($isbn)) {
             parent::withJson([

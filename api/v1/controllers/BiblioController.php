@@ -18,6 +18,9 @@ class BiblioController extends Controller
 
     use Image;
 
+    /**
+     * @var array
+     */
     protected $sysconf;
 
     /**
@@ -25,7 +28,7 @@ class BiblioController extends Controller
      */
     protected $db;
 
-    function __construct($sysconf, $obj_db)
+    function __construct(array $sysconf, mysqli $obj_db)
     {
         $this->sysconf = $sysconf;
         $this->db = $obj_db;
@@ -100,7 +103,11 @@ class BiblioController extends Controller
         ]);
     }
 
-    public function getByGmd($gmd) {
+    /**
+     * @param string $gmd
+     * @return void
+     */
+    public function getByGmd(string $gmd) {
         $limit = 3;
         $sql = "SELECT b.biblio_id, b.title, b.image, b.notes
           FROM biblio AS b, mst_gmd AS g
@@ -117,7 +124,11 @@ class BiblioController extends Controller
         parent::withJson($return);
     }
 
-    public function getByCollType($coll_type) {
+    /**
+     * @param string $coll_type
+     * @return void
+     */
+    public function getByCollType(string $coll_type) {
         $limit = 3;
         $sql = "SELECT b.biblio_id, b.title, b.image, b.notes
           FROM biblio AS b, item AS i, mst_coll_type AS c
@@ -139,7 +150,7 @@ class BiblioController extends Controller
      * GET /api/v1/biblio/search?q={término}
      * Usado por la PWA Barrioteca Acalencá
      *
-     * @return JSON array con resultados de búsqueda
+     * @return void
      */
     public function search()
     {

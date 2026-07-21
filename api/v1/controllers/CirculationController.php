@@ -221,8 +221,16 @@ class CirculationController extends Controller
             }
             $member = $member_query->fetch_assoc();
 
-            // Verificar item
-            $item_query = $this->db->query("SELECT i.item_code, b.title FROM item i LEFT JOIN biblio b ON i.biblio_id = b.biblio_id WHERE i.item_code = '" . $this->db->real_escape_string($item_code) . "' LIMIT 1");
+            // Verificar item: buscar por item_code o por ISBN/ASIN
+            $safe_code = $this->db->real_escape_string($item_code);
+            $item_query = $this->db->query("
+                SELECT i.item_code, b.title 
+                FROM item i 
+                LEFT JOIN biblio b ON i.biblio_id = b.biblio_id 
+                WHERE i.item_code = '{$safe_code}' 
+                   OR b.isbn_issn = '{$safe_code}'
+                LIMIT 1
+            ");
             if ($item_query->num_rows == 0) {
                 parent::withJson(['status' => 'error', 'message' => 'El libro no existe en la biblioteca.']);
                 return;

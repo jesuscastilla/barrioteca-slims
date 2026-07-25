@@ -7,7 +7,7 @@ Este archivo contiene el contexto necesario para retomar el trabajo sin perder i
 ## Arquitectura General
 
 ```
-Dominio publico:   https://pelotxo.synology.me
+Dominio publico:   https://pelotxo.synology.me:5001
 NAS:               Synology con Web Station (Nginx 1.23.1) + PHP 8 + MariaDB
 ```
 

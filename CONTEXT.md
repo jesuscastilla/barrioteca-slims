@@ -244,9 +244,10 @@ Cuando se modifica el frontend, hay que subir estos 3:
 | `PWA/api-proxy.php` | `/barrioteca/api-proxy.php` |
 | `SLiMS/index.php` | `/slims/index.php` |
 
-### Para el script de importacion CSV:
+### Para los scripts de importacion:
 
 | Origen local | Destino NAS |
 |-------------|-------------|
 | `PWA/importar-csv.php` | `/slims/importar-csv.php` |
+| `SLiMS/anadir-libro.php` | `/slims/anadir-libro.php` |
 | `SLiMS/index_opac_original.php` | `/slims/index_opac_original.php` |

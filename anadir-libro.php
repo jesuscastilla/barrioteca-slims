@@ -197,6 +197,9 @@ $formData = [
     'title' => '', 'authors' => '', 'publisher' => '', 'publish_year' => '',
     'pages' => '', 'isbn' => '', 'description' => '', 'image_url' => ''
 ];
+$savedBiblioId = 0;
+$savedItemCode = '';
+$savedTitle = '';
 
 // 1. Búsqueda
 if ($step === 'search' && !empty($_POST['title'])) {
@@ -280,6 +283,12 @@ if ($step === 'save' && !empty($_POST['title'])) {
         $message = $result['msg'];
         $messageType = $result['ok'] ? 'success' : 'error';
         if ($result['ok']) {
+            // Extraer el biblio_id del mensaje
+            if (preg_match('/ID: (\d+)/', $result['msg'], $m)) {
+                $savedBiblioId = (int)$m[1];
+                $savedItemCode = 'LIB-' . $savedBiblioId;
+                $savedTitle = $meta['title'];
+            }
             $step = 'done';
         } else {
             $formData = array_map('htmlspecialchars', $meta);
@@ -348,6 +357,11 @@ if ($step === 'search' && empty($searchResults) && empty($message)) {
   .hint { background: #fefce8; border: 1px solid #fde047; border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: #854d0e; margin: 12px 0; }
   .important { background: #fef2f2; border: 2px solid #dc2626; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-weight: 600; color: #991b1b; }
   hr { border: none; border-top: 1px solid #eee; margin: 20px 0; }
+  .label-card { text-align:center; border:2px dashed #ddd; border-radius:16px; padding:20px 24px; max-width:380px; margin:16px auto; background:#fafafa; }
+  .label-header { font-size: 10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#999; margin-bottom:6px; }
+  .label-title { font-size:14px; font-weight:700; line-height:1.3; margin-bottom:12px; }
+  .label-barcode { display:block; margin:0 auto; }
+  .label-code { font-family: 'Courier New', monospace; font-size: 15px; font-weight:700; letter-spacing:0.15em; margin-top:4px; color:#333; }
 </style>
 </head>
 <body>
@@ -488,11 +502,62 @@ if ($step === 'search' && empty($searchResults) && empty($message)) {
   <h1 style="font-size:2rem;">✅</h1>
   <div class="message success"><?= htmlspecialchars($message) ?></div>
   <p class="sub" style="margin: 16px 0;">El libro ya esta disponible en el catalogo de la Barrioteca.</p>
-  <div class="flex" style="justify-content:center;">
-    <a href="?" class="btn">Añadir otro libro</a>
+
+  <?php if ($savedBiblioId > 0): ?>
+  <div class="label-sheet" id="labelSheet">
+    <div class="label-card">
+      <div class="label-header">Barrioteca Acalenca</div>
+      <div class="label-title"><?= htmlspecialchars(mb_substr($savedTitle, 0, 60)) ?></div>
+      <svg id="barcodeSvg" class="label-barcode"></svg>
+      <div class="label-code"><?= htmlspecialchars($savedItemCode) ?></div>
+    </div>
+  </div>
+  <p class="sub" style="margin:12px 0 8px;">Escanea este codigo de barras con la PWA para prestar/devolver el libro.</p>
+  <p class="sub" style="margin-bottom:16px;">Imprime la etiqueta y pegala en el libro.</p>
+  <button class="btn" onclick="printLabel()" style="margin-right:10px;">Imprimir etiqueta</button>
+  <?php endif; ?>
+
+  <div class="flex" style="justify-content:center;margin-top:16px;">
+    <a href="?" class="btn-outline" style="text-decoration:none;">Añadir otro libro</a>
     <a href="/slims/" class="btn-outline" style="text-decoration:none;">Ver catalogo</a>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script>
+<?php if ($savedBiblioId > 0): ?>
+try {
+  JsBarcode('#barcodeSvg', '<?= htmlspecialchars($savedItemCode) ?>', {
+    format: 'CODE128',
+    width: 2,
+    height: 60,
+    displayValue: true,
+    fontSize: 14,
+    textMargin: 6,
+    margin: 8,
+    background: '#ffffff',
+    lineColor: '#000000'
+  });
+} catch(e) { console.error('Error generando codigo de barras:', e); }
+
+function printLabel() {
+  var label = document.getElementById('labelSheet');
+  var win = window.open('', '_blank', 'width=400,height=400');
+  win.document.write('<html><head><title>Etiqueta - Barrioteca</title><style>' +
+    '* { margin:0; padding:0; box-sizing:border-box; }' +
+    'body { font-family: system-ui, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; }' +
+    '.label-sheet { padding: 20px; }' +
+    '.label-card { text-align:center; border:2px dashed #ccc; border-radius:16px; padding:20px 24px; max-width:350px; }' +
+    '.label-header { font-size: 10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#999; margin-bottom:6px; }' +
+    '.label-title { font-size:13px; font-weight:700; line-height:1.3; margin-bottom:10px; }' +
+    '.label-barcode { display:block; margin:0 auto; }' +
+    '.label-code { font-family: monospace; font-size: 13px; font-weight:700; letter-spacing:0.1em; margin-top:2px; }' +
+    '</style></head><body>' + label.outerHTML + '</body></html>');
+  win.document.close();
+  setTimeout(function() { win.print(); win.close(); }, 500);
+}
+<?php endif; ?>
+</script>
 <?php endif; ?>
 
 </body>

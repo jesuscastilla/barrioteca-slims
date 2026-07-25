@@ -7,8 +7,10 @@ Este archivo contiene el contexto necesario para retomar el trabajo sin perder i
 ## Arquitectura General
 
 ```
-Dominio publico:   https://pelotxo.synology.me:5001
+Dominio publico:   https://pelotxo.synology.me
 NAS:               Synology con Web Station (Nginx 1.23.1) + PHP 8 + MariaDB
+                   Acceso a DSM (admin): https://pelotxo.synology.me:5001
+                   Nube local encriptada y autogestionada
 ```
 
 ### Dos proyectos en el repositorio:
@@ -89,14 +91,34 @@ SLIMS_API_BASE=http://localhost/slims/api/index.php
 - El HTML, JS y CSS se actualizan automaticamente en los moviles
 - Las peticiones a la API nunca se cachean
 
-## Script importar-csv.php
+## Scripts de importacion de libros
 
+### 1. `importar-csv.php` — Importacion masiva por ISBN (lotes)
+
+- **Ubicacion:** `PWA/importar-csv.php` → se sube a `/slims/importar-csv.php`
 - Insercion correcta en `biblio` con `gmd_id=1` (no solo en items)
 - Procesa por lotes de 3 libros para evitar timeout 504
 - Avance automatico entre lotes con cuenta atras de 5 segundos
 - Al finalizar muestra ISBNs no encontrados + boton "Subir otro archivo CSV"
 - Consulta Open Library (gratis) y Google Books (espanol) como respaldo
 - Descarga portadas automaticamente
+
+### 2. `anadir-libro.php` — Añadir libros sin ISBN (manual + busqueda)
+
+- **Ubicacion:** `SLiMS/anadir-libro.php` → se sube a `/slims/anadir-libro.php`
+- Busca por titulo (+ autor opcional) en Open Library y Google Books
+- Muestra hasta 5 resultados con portada y sinopsis
+- Permite seleccionar un resultado y editar los datos antes de guardar
+- Formulario manual completo (titulo, autoras, editorial, ano, paginas, sinopsis, URL de portada)
+- Preview de portada en vivo
+- Soporta libros con o sin ISBN
+- Inserta en `biblio` con `gmd_id=1`, crea autores/editoriales si no existen, indexa
+
+### 3. `importar-isbns.php` — Importacion simple de ISBNs
+
+- **Ubicacion:** `PWA/importar-isbns.php`
+- Permite pegar una lista de ISBNs (uno por linea)
+- Busca y añade cada ISBN individualmente usando Google Books + Open Library
 
 ---
 
@@ -130,6 +152,7 @@ SLIMS_API_BASE=http://localhost/slims/api/index.php
 | 6 | `docker-compose.yml` con contrasena hardcodeada | Variables de entorno |
 | 7 | `entrypoint.sh` DB_PORT sin comillas | Corregido |
 | 8 | Datos personales en backups y diffs | Eliminados o anadidos a `.gitignore` |
+| 9 | Type hints faltantes en controladores (Member, Circulation, Biblio) | Anadidos `array`, `mysqli`, `string` y `@return void` |
 
 ---
 

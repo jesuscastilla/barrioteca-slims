@@ -49,18 +49,58 @@ Se ha añadido un `CirculationController` con endpoints específicos para la PWA
 | `/api/v1/loan/return` | POST | Registrar una devolución |
 | `/api/v1/biblio/search` | GET | Buscar en el catálogo |
 
-### Catalogador por ISBN
+### Scripts de importacion de libros
 
-Módulo `isbn_lookup.php` que permite catalogar libros automáticamente introduciendo su ISBN. Consulta múltiples fuentes:
+La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fuentes externas, sin necesidad de introducir los datos a mano en el panel de administracion.
+
+#### 1. `importar-csv.php` — Importacion masiva por ISBN (por lotes)
+
+- **Ubicacion en repo:** `PWA/importar-csv.php`
+- **Se sube a:** `/slims/importar-csv.php`
+- **Acceso:** `https://pelotxo.synology.me/slims/importar-csv.php`
+- Sube un archivo CSV con ISBNs escaneados y los procesa por lotes de 3 libros
+- Avance automatico entre lotes con cuenta atras de 5 segundos (evita timeout 504)
+- Consulta Open Library (gratis) y Google Books como fuentes de metadatos
+- Descarga portadas automaticamente a `images/docs/`
+- Muestra ISBNs no encontrados al finalizar
+- Soporta reinicio y eliminacion del propio script cuando se termina
+
+#### 2. `anadir-libro.php` — Añadir libros sin ISBN (busqueda + manual)
+
+- **Ubicacion en repo:** `SLiMS/anadir-libro.php`
+- **Se sube a:** `/slims/anadir-libro.php`
+- **Acceso:** `https://pelotxo.synology.me/slims/anadir-libro.php`
+- Busca por titulo (+ autor opcional) en Open Library y Google Books
+- Muestra hasta 5 resultados con portada, sinopsis y metadatos
+- Permite seleccionar un resultado, editar los datos y guardar
+- Formulario manual completo: titulo, autoras, editorial, ano, paginas, sinopsis, URL de portada
+- Preview de portada en vivo
+- Soporta libros con o sin ISBN
+- Inserta en `biblio` con `gmd_id=1`, crea autores/editoriales si no existen, indexa
+
+#### 3. `importar-isbns.php` — Importacion simple de ISBNs (uno por linea)
+
+- **Ubicacion en repo:** `PWA/importar-isbns.php`
+- Permite pegar una lista de ISBNs (uno por linea) en un campo de texto
+- Busca y añade cada ISBN usando Google Books + Open Library
+- Util para añadir unos pocos libros sin necesidad de preparar un CSV
+
+#### 4. `isbn_lookup.php` — Catalogador original por ISBN
+
+Modulo original de SLiMS que permite catalogar libros automaticamente introduciendo su ISBN:
 - Google Books API
 - Open Library API
 - ISBN España (Ministerio de Cultura)
 
-No requiere la extensión `php-yaz` ni Z39.50, lo que facilita su uso en NAS Synology.
+No requiere la extension `php-yaz` ni Z39.50, lo que facilita su uso en NAS Synology.
 
 ### Lenguaje feminizado
 
 La interfaz administrativa y la API usan lenguaje en femenino (socia, autora) para mantener la coherencia con el frontend.
+
+## Infraestructura
+
+La Barrioteca Acalenca se aloja en un **NAS Synology** que proporciona una nube local encriptada y autogestionada, sin dependencia de servidores externos. El acceso al panel de administracion (DSM) se realiza via `https://pelotxo.synology.me:5001`.
 
 ## Requisitos técnicos
 

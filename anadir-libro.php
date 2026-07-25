@@ -499,7 +499,7 @@ if ($step === 'search' && empty($searchResults) && empty($message)) {
 
 <?php elseif ($step === 'done'): ?>
 <div class="card" style="text-align:center;">
-  <h1 style="font-size:2rem;">✅</h1>
+  <h1 style="font-size:2rem;color:#16a34a;">Libro anadido</h1>
   <div class="message success"><?= htmlspecialchars($message) ?></div>
   <p class="sub" style="margin: 16px 0;">El libro ya esta disponible en el catalogo de la Barrioteca.</p>
 

@@ -1,0 +1,334 @@
+<?php
+/**
+ * Archivo de configuración global de la aplicación SLiMS
+ *
+ * Copyright (C) 2010  Arie Nugraha (dicarve@yahoo.com), Hendro Wicaksono (hendrowicaksono@yahoo.com), Wardiyono (wynerst@gmail.com)
+ *
+ * Este programa es software libre; puedes redistribuirlo y/o modificarlo
+ * bajo los términos de la Licencia Pública General GNU publicada por
+ * la Free Software Foundation; ya sea la versión 3 de la Licencia, o
+ * (at tu elección) cualquier versión posterior.
+ */
+
+// Asegurarse de que este archivo no sea accedido directamente
+if (!defined('INDEX_AUTH')) {
+    die("No se puede acceder a este archivo directamente");
+} else if (INDEX_AUTH != 1) {
+    die("No se puede acceder a este archivo directamente");
+}
+
+define('SLiMS_START', microtime(true));
+
+// Configuración del entorno
+$envExists = file_exists($envFile = __DIR__ .  '/config/env.php');
+if ($envExists) require $envFile;
+
+/*
+ * Establecer a desarrollo (development) o producción (production)
+ *
+ * En modo producción, los mensajes de error del sistema se desactivarán
+ */
+define('ENVIRONMENT', $env??'unavailable');
+
+if (ENVIRONMENT === 'unavailable' && file_exists(__DIR__ . '/config/database.php') && php_sapi_name() !== 'cli') {
+  header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
+  include __DIR__ . DIRECTORY_SEPARATOR . 'template' . DIRECTORY_SEPARATOR . 'serviceunavailable.php';
+  exit(1); // EXIT_ERROR
+}
+
+// Establecer cabecera de seguridad para prevenir clickjacking
+header('X-Frame-Options: SAMEORIGIN');
+
+// Requerir librería composer
+if (file_exists(__DIR__ . '/vendor/autoload.php')) require __DIR__ . '/vendor/autoload.php';
+
+// Autoload de SLiMS
+require __DIR__ . '/lib/autoload.php';
+
+// Manejador de errores
+require __DIR__ . '/lib/errorHandler.inc.php';
+registerSlimsHandler();
+
+// Usar httpOnly para cookies
+@ini_set( 'session.cookie_httponly', true );
+@ini_set( 'session.use_only_cookies', true );
+@ini_set( 'session.cookie_secure', false );
+
+// Versión de SLiMS
+define('SENAYAN_VERSION', 'SLiMS 9 (Bulian D Roger)');
+define('SENAYAN_VERSION_TAG', 'v9.7.2');
+
+// Nombres de las cookies de sesión
+define('COOKIES_NAME', 'SenayanAdmin');
+define('MEMBER_COOKIES_NAME', 'SenayanMember');
+
+// Alias para el separador de directorios
+define('DS', DIRECTORY_SEPARATOR);
+
+// Directorio base de SLiMS
+define('SB', realpath(dirname(__FILE__)).DS);
+
+// Ruta absoluta para la plataforma simbio
+define('SIMBIO', SB.'simbio2'.DS);
+
+// Directorio base de las librerías
+define('LIB', SB.'lib'.DS);
+
+// Directorio base para imágenes de documentos, socias y códigos de barras
+define('IMG', 'images');
+define('IMGBS', SB.IMG.DS);
+
+// Directorio base de los módulos
+define('MDL', 'modules');
+define('MDLBS', SB.'admin'.DS.MDL.DS);
+
+// Directorio de subida de archivos
+define('FLS', 'files');
+define('UPLOAD', SB.FLS.DS);
+
+// Directorio de repositorio
+define('REPO', 'repository');
+$repobs['enable'] = FALSE;
+$repobs['path'] = '/tu/ruta/alternativa/de/repositorio/';
+if ($repobs['enable'] == TRUE) {
+  define('REPOBS', $repobs['path']);
+} else {
+  define('REPOBS', SB.REPO.DS);
+}
+
+// Directorio de adjuntos
+define('ATC', 'att');
+define('FILE_ATC', UPLOAD.ATC);
+
+// Directorio de reportes impresos
+define('REP', 'reports');
+define('REPBS', UPLOAD.REP.DS);
+
+// Directorio base de idiomas
+define('LANG', LIB.'lang'.DS);
+
+// Directorio base de ayuda
+define('HELP', SB.'help'.DS);
+
+// Reglas de estado de items
+define('NO_LOAN_TRANSACTION', 1);
+define('SKIP_STOCK_TAKE', 2);
+
+// Estado de ejecución de comandos
+define('BINARY_NOT_FOUND', 127);
+define('BINARY_FOUND', 1);
+define('COMMAND_SUCCESS', 0);
+define('COMMAND_FAILED', 2);
+
+// URL base personalizada
+$sysconf['baseurl'] = \SLiMS\Config::getInstance()->get('url.base', '');
+$_SERVER['PHP_SELF'] = strip_tags(str_replace(['"','\''], '', $_SERVER['PHP_SELF']));
+$temp_senayan_web_root_dir = preg_replace('@admin.*@i', '', str_replace('\\', '/', dirname(@$_SERVER['PHP_SELF'])));
+define('SWB', $sysconf['baseurl'].$temp_senayan_web_root_dir.(preg_match('@\/$@i', $temp_senayan_web_root_dir)?'':'/'));
+$_SERVER['PHP_SELF'] = $sysconf['baseurl'] . $_SERVER['PHP_SELF'];
+
+// Directorio web de la sección de administración
+define('AWB', SWB.'admin/');
+
+// Directorio web de librerías javascript
+define('JWB', SWB.'js/');
+
+// Directorio web de módulos
+define('MWB', SWB.'admin/'.MDL.'/');
+
+// Directorio web base del repositorio
+define('REPO_WBS', SWB.REPO.'/');
+
+// Comprobar configuración de base de datos
+if (!file_exists(SB.'config'.DS.'database.php')) {
+    header('location: ' . SWB . 'install/index.php');
+    exit;
+}
+
+// Comprobación de extensiones
+\SLiMS\Extension::throwIfNotFulfilled();
+
+// Inclusión de clases principales
+require SIMBIO.'simbio.inc.php';
+require SIMBIO.'simbio_UTILS'.DS.'simbio_security.inc.php';
+require LIB.'utility.inc.php';
+require LIB.'api.inc.php';
+require MDLBS.'bibliography/biblio.inc.php';
+
+// Comprobar si es un navegador móvil
+if (utility::isMobileBrowser()) { define('LIGHTWEIGHT_MODE', 1); }
+
+/* SEGURIDAD AJAX */
+$sysconf['ajaxsec_user'] = 'ajax';
+$sysconf['ajaxsec_passwd'] = 'secure';
+$sysconf['ajaxsec_ip_enabled'] = 0;
+$sysconf['ajaxsec_ip_allowed'] = '';
+
+/* Tiempo de espera de sesión en segundos */
+$sysconf['session_timeout'] = 7200;
+
+/* Idioma por defecto de la aplicación */
+$sysconf['default_lang'] = 'es_ES';
+$sysconf['spellchecker_enabled'] = true;
+
+/* Cabecera HTTP */
+header('Content-type: text/html; charset=UTF-8');
+
+/* Configuración de plantillas GUI */
+$sysconf['template']['dir'] = 'template';
+$sysconf['template']['theme'] = 'default';
+$sysconf['template']['css'] = $sysconf['template']['dir'].'/'.$sysconf['template']['theme'].'/style.css';
+
+/* Configuración de plantillas de administración */
+$sysconf['admin_template']['dir'] = 'admin_template';
+$sysconf['admin_template']['theme'] = 'default';
+$sysconf['admin_template']['css'] = $sysconf['admin_template']['dir'].'/'.$sysconf['admin_template']['theme'].'/style.css';
+
+/* OPAC */
+$sysconf['opac_result_num'] = 10;
+
+/* Módulo de Bibliografía */
+$sysconf['biblio_result_num'] = 30;
+$sysconf['batch_item_code_pattern'] = 'B00000';
+
+/* Promover títulos seleccionados en la página de inicio */
+$sysconf['enable_promote_titles'] = false;
+$sysconf['promote_first_emphasized'] = true;
+
+/* Contenido Dinámico */
+$sysconf['content']['allowable_tags'] = '<p><a><cite><code><em><strong><cite><blockquote><fieldset><legend>'
+    .'<h3><hr><br><table><tr><td><th><thead><tbody><tfoot><div><span><img><object><param><ul><ol><li><i>';
+
+/* Permitir a las socias marcar títulos, ver la cesta en detalles y enviar correo para reserva */
+$sysconf['enable_mark'] = true;
+
+/* XML */
+$sysconf['enable_xml_detail'] = true;
+$sysconf['enable_xml_result'] = true;
+
+/* JSON LD */
+$sysconf['jsonld_result'] = true;
+$sysconf['jsonld_detail'] = true;
+
+// Ubicación de copias de seguridad
+$sysconf['temp_dir'] = '/tmp';
+$sysconf['backup_dir'] = UPLOAD.'backup'.DS;
+
+/* DESCARGA DE ARCHIVOS */
+$sysconf['allow_file_download'] = false;
+
+/* Característica de WEBCAM */
+$sysconf['webcam'] = 'html5';
+
+/* Característica de ESCÁNER */
+$sysconf['scanner'] = false;
+
+/* Buscar portada de libro */
+$sysconf['book_cover'] = true;
+
+/* Lector de códigos de barras */
+$sysconf['barcode_reader'] = false;
+
+// Motor de códigos de barras Zend
+$sysconf['zend_barcode_engine'] = true;
+$sysconf['barcode_encoding'] = 'code128';
+
+/* DEVOLUCIÓN RÁPIDA */
+$sysconf['quick_return'] = true;
+
+/* ANULAR LÍMITE DE PRÉSTAMO */
+$sysconf['loan_limit_override'] = false;
+
+/* CAMBIO DE FECHA DE PRÉSTAMO EN CIRCULACIÓN */
+$sysconf['allow_loan_date_change'] = false;
+
+/* RELACIONADO CON CIRCULACIÓN */
+$sysconf['circulation_receipt'] = false;
+
+/* RELACIONADO CON NOTIFICACIONES */
+$sysconf['transaction_finished_notification'] = false;
+$sysconf['bibliography_update_notification'] = true;
+$sysconf['bibliography_item_update_notification'] = true;
+$sysconf['login_message'] = false;
+$sysconf['logout_message'] = false;
+
+/* SUBIDA DE ARCHIVOS */
+$sysconf['max_upload'] = intval(ini_get('upload_max_filesize'))*1024;
+$post_max_size = intval(ini_get('post_max_size'))*1024;
+if ($sysconf['max_upload'] > $post_max_size) {
+    $sysconf['max_upload'] = $post_max_size-1024;
+}
+$sysconf['max_image_upload'] = 500;
+// Imágenes permitidas
+$sysconf['allowed_images'] = array('.jpeg', '.jpg', '.gif', '.png', '.JPEG', '.JPG', '.GIF', '.PNG');
+// Adjuntos permitidos
+$sysconf['allowed_file_att'] = array('.pdf', '.rtf', '.txt',
+    '.odt', '.odp', '.ods', '.doc', '.xls', '.ppt',
+    '.avi', '.mpeg', '.mp4', '.flv', '.mkv',
+    '.jpg', '.jpeg', '.png', '.gif',
+    '.docx', '.pptx', '.xlsx',
+    '.ogg', '.mp3', '.xml', '.mrc');
+
+/* MONEDAS */
+$sysconf['currencies'] = array( array('0', 'NINGUNA'), 'Euro', 'Rupiah', 'USD', 'DM', 'Pounds', 'Yen', 'Won', 'Yuan', 'SGD', 'Bath', 'Ruppee', 'Taka', 'AUD');
+
+/* PERIODO DE RESERVA (En días) */
+$sysconf['reserve_expire_periode'] = 7;
+
+// true = la reserva se guardará directamente en la tabla de reservas
+$sysconf['reserve_direct_database'] = true;
+
+// false = reservar cualquier item, ignorando el estado de préstamo
+$sysconf['reserve_on_loan_only'] = false;
+
+/* CONTENIDO */
+$sysconf['library_name'] = 'Barrioteca Acalencá';
+$sysconf['library_subname'] = 'Sistema de Gestión de Biblioteca';
+$sysconf['page_footer'] = ' Barrioteca Acalencá - Basado en SLiMS (Bulian). Liberado bajo Licencia GNU GPL.';
+
+/* Configuración HTTPS */
+$sysconf['https_enable'] = false;
+$sysconf['https_port'] = 443;
+
+/* Formato de fecha para OPAC */
+$sysconf['date_format'] = 'Y-m-d';
+
+$sysconf['pdf']['viewer'] = 'pdfjs';
+
+/**
+ * Configuración global UCS
+ */
+$sysconf['ucs']['enable'] = false;
+$sysconf['ucs']['auto_delete'] = false;
+$sysconf['ucs']['auto_insert'] = false;
+$sysconf['ucs']['serveraddr'] = 'http://localhost/ucs';
+
+/* IP Based Access Limitation */
+$sysconf['ipaccess']['general'] = 'all';
+$sysconf['ipaccess']['smc'] = 'all';
+$sysconf['ipaccess']['smc-system'] = 'all';
+$sysconf['ipaccess']['smc-membership'] = 'all';
+$sysconf['ipaccess']['smc-bibliography'] = 'all';
+$sysconf['ipaccess']['smc-circulation'] = 'all';
+$sysconf['ipaccess']['smc-masterfile'] = 'all';
+$sysconf['ipaccess']['smc-stocktake'] = 'all';
+$sysconf['ipaccess']['smc-reporting'] = 'all';
+$sysconf['ipaccess']['smc-serialcontrol'] = 'all';
+$sysconf['ipaccess']['opac'] = 'all';
+
+// Captcha factory
+\SLiMS\Captcha\Factory::operate();
+
+require_once LIB . 'helper.inc.php';
+
+// Sanitize incoming data
+$sanitizer = \SLiMS\Sanitizer::fromGlobal(config('custom_sanitizer_options', [
+  'get' => $__GET ?? $_GET,
+  'server' => $_SERVER,
+  'post' => $_POST
+]));
+
+// create dynamic config file from sample
+\SLiMS\Config::createFromSampleIfNotExists([
+  'csp','auth'
+]);

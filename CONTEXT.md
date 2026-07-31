@@ -227,58 +227,10 @@ SLIMS_API_BASE=http://localhost/slims/api/index.php
 
 ---
 
-## App Android (APK)
-
-La PWA se ha convertido en una app Android nativa mediante **PWABuilder** (Trusted Web Activity).
-
-### Archivos generados
-
-| Archivo | Ubicación | Descripción |
-|---------|-----------|-------------|
-| `Barrioteca Acalencá.apk` | `barrioteca-android-app/` | APK firmada lista para instalar |
-| `Barrioteca Acalencá.aab` | `barrioteca-android-app/` | Android App Bundle (para Google Play) |
-| `signing.keystore` | `barrioteca-android-app/` | 🔑 Certificado de firma (¡no perder!) |
-| `signing-key-info.txt` | `barrioteca-android-app/` | Contraseñas del keystore |
-
-### Datos técnicos de la APK
-
-| Dato | Valor |
-|------|-------|
-| Package ID | `barrioteca.app.pelotxo` |
-| minSdkVersion | 23 (Android 6.0) |
-| targetSdkVersion | 35 |
-| compileSdkVersion | 36 |
-| URL que abre | `https://pelotxo.synology.me/barrioteca` |
-| Generada con | PWABuilder (https://pwabuilder.com) |
-| Método | Trusted Web Activity (Chrome Custom Tab sin barra de navegación) |
-
-### Cómo actualizar la APK
-
-1. Ve a https://pwabuilder.com
-2. Introduce `https://pelotxo.synology.me/barrioteca`
-3. Haz clic en "Build My PWA" → Android → descarga
-4. El ZIP incluye APK, AAB y keystore
-5. Sube el `.aab` a Google Play Console
-
-### ⚠️ IMPORTANTE
-
-- **El keystore (`signing.keystore`) es IRREMPLAZABLE.** Sin él no se pueden publicar actualizaciones.
-- **Guardar copia del keystore en USB y nube** (no solo en este repositorio).
-- **Las contraseñas están en `signing-key-info.txt`.** Apuntarlas en un gestor de contraseñas.
-- Los archivos del keystore **NO deben subirse a repositorios públicos** (están en `.gitignore`).
-
-### Guía completa
-
-Ver `GUIA_APK.md` para instrucciones paso a paso sobre compilación, firma y publicación en Google Play.
-
----
-
 ## Repositorios GitHub
 
 - PWA:  https://github.com/jesuscastilla/acalenca-barrioteca-app
 - SLiMS: https://github.com/jesuscastilla/acalenca-barrioteca
-- App Android (docs): https://github.com/jesuscastilla/acalenca-barrioteca-app-android
-- App iOS (docs): https://github.com/jesuscastilla/acalenca-barrioteca-app-ios
 
 ---
 

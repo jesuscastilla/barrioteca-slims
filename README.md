@@ -1,144 +1,123 @@
-# Barrioteca Acalencá
+# Barrioteca Acalencá — SLiMS (Backend)
 
-Biblioteca vecinal autogestionada de Salobreña (Granada). Sistema de préstamos y catálogo con software libre: **SLiMS** (backend PHP/MariaDB) + **PWA** (frontend React/TypeScript) + **App Android** (Trusted Web Activity).
+Instancia de **SLiMS 9 Bulian** (Senayan Library Management System) adaptada para la **Barrioteca Acalencá**, una biblioteca vecinal autogestionada de Salobreña.
 
----
+## ¿Qué es esto?
 
-## Repositorios
+SLiMS es el software de gestión bibliotecaria que usamos como backend. Aquí se almacenan:
+- Los datos de las socias (nombre, ID de socia, fecha de registro...)
+- El catálogo de libros (título, autora, ISBN, editorial...)
+- Los ejemplares y su estado (disponible / prestado)
+- El histórico de préstamos y devoluciones
 
-Este es el **monorepo de documentación**. El código fuente está en repos separados:
+Sobre esta base de datos se apoya la aplicación (PWA) que usan las socias desde el móvil. (https://github.com/jesuscastilla/acalenca-barrioteca-app)
 
-| Repositorio | Descripción | URL |
-|------------|-------------|-----|
-| **PWA (Frontend)** | React 19 + Vite + Tailwind + TypeScript | [github.com/jesuscastilla/acalenca-barrioteca-app](https://github.com/jesuscastilla/acalenca-barrioteca-app) |
-| **SLiMS (Backend)** | SLiMS 9.7.2 + API REST (PHP/MariaDB) | [github.com/jesuscastilla/acalenca-barrioteca](https://github.com/jesuscastilla/acalenca-barrioteca) |
-| **App Android (docs)** | Documentación, guías, app Android | [github.com/jesuscastilla/acalenca-barrioteca-app-android](https://github.com/jesuscastilla/acalenca-barrioteca-app-android) |
-| **App iOS (docs)** | Documentación, guías, app iOS | [github.com/jesuscastilla/acalenca-barrioteca-app-ios](https://github.com/jesuscastilla/acalenca-barrioteca-app-ios) |
+## Cómo funciona la autogestión
 
----
+La barrioteca se organiza de forma vecinal y horizontal:
 
-## Arquitectura
+1. **Administración**: Una o varias vecinas con acceso al panel de SLiMS dan de alta a nuevas socias, añaden libros al catálogo y gestionan incidencias.
+2. **Socias**: Cualquier vecina puede recibir un ID de socia. Con ese ID entra en la PWA y comienza a gestionar sus propios préstamos.
+3. **Préstamos y devoluciones**: Se realizan escaneando el código de barras del libro con la cámara del móvil. No hace falta intervención de la administración para el día a día.
+4. **Transparencia**: Cualquier socia puede consultar el catálogo y saber si un libro está disponible.
+
+### Flujo completo
 
 ```
-+------------------------------------------------------+
-|                https://pelotxo.synology.me            |
-|                   NAS Synology                        |
-|                                                       |
-|  /barrioteca/          /slims/                        |
-|  +----------------+   +------------------------+      |
-|  | PWA (React)    |-->| SLiMS API (PHP)        |      |
-|  | api-proxy.php  |   | api/index.php          |      |
-|  | manifest.json  |   | CirculationController  |      |
-|  | sw.js          |   | BiblioController       |      |
-|  | icon*.png      |   | MariaDB                |      |
-|  +----------------+   +------------------------+      |
-|                                                       |
-|  App Android (.apk) ---> https://pelotxo.synology.me  |
-|       (Trusted Web Activity)                          |
-+------------------------------------------------------+
+Vecina se asocia  →  Administradora crea la usuaria en SLiMS
+                    →  Vecina recibe su ID (ej. SOCIA-001)
+                    →  Abre la PWA, introduce su ID
+                    →  Escanea el libro que quiere (ISBN/ASIN)
+                    →  SLiMS registra el préstamo
+                    →  Al devolver, escanea otra vez
+                    →  SLiMS libera el ejemplar
 ```
 
-- La PWA se comunica con la API de SLiMS mediante un proxy PHP (`api-proxy.php`)
-- La app Android usa **Trusted Web Activity** para abrir la PWA en pantalla completa sin barra de navegación
-- Todo se aloja en un NAS Synology autogestionado, sin servidores externos
-- **HTTPS obligatorio** (Let's Encrypt desde Synology) para que PWA y Service Workers funcionen
+## Personalizaciones realizadas
 
----
+Este SLiMS incluye varias adaptaciones para el proyecto:
 
-## App Android
+### API REST de circulación
 
-La PWA se ha convertido en una **app Android nativa** (`.apk` y `.aab`) mediante [PWABuilder](https://pwabuilder.com).
+Se ha añadido un `CirculationController` con endpoints específicos para la PWA:
 
-### Datos técnicos
+| Endpoint | Método | Función |
+|---|---|---|
+| `/api/v1/member/{id}/verify` | GET | Verificar si una socia existe |
+| `/api/v1/item/{isbn}/status` | GET | Consultar disponibilidad de un ejemplar |
+| `/api/v1/loan/borrow` | POST | Registrar un préstamo |
+| `/api/v1/loan/return` | POST | Registrar una devolución |
+| `/api/v1/biblio/search` | GET | Buscar en el catálogo |
 
-| Dato | Valor |
-|------|-------|
-| Package ID | `barrioteca.app.pelotxo` |
-| minSdkVersion | 23 (Android 6.0) |
-| targetSdkVersion | 35 |
-| URL | `https://pelotxo.synology.me/barrioteca` |
-| Tipo | Trusted Web Activity (Chrome Custom Tab) |
-| Cámara | Si (escáner de códigos de barras ISBN/ASIN) |
+### Scripts de importacion de libros
 
-### Actualizar la app
+La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fuentes externas, sin necesidad de introducir los datos a mano en el panel de administracion.
 
-La app Android carga la web en vivo, por lo que **no necesita actualizaciones manuales**. Si modificas la PWA en el NAS, los cambios se reflejan automáticamente en la app.
+#### 1. `importar-csv.php` — Importacion masiva por ISBN (por lotes)
 
-Para publicar una nueva versión en Google Play, consulta [`GUIA_APK.md`](GUIA_APK.md).
+- **Ubicacion en repo:** `PWA/importar-csv.php`
+- **Se sube a:** `/slims/importar-csv.php`
+- **Acceso:** `https://pelotxo.synology.me/slims/importar-csv.php`
+- Sube un archivo CSV con ISBNs escaneados y los procesa por lotes de 3 libros
+- Avance automatico entre lotes con cuenta atras de 5 segundos (evita timeout 504)
+- Consulta Open Library (gratis) y Google Books como fuentes de metadatos
+- Descarga portadas automaticamente a `images/docs/`
+- Muestra ISBNs no encontrados al finalizar
+- Soporta reinicio y eliminacion del propio script cuando se termina
 
-### Archivos de la app
+#### 2. `anadir-libro.php` — Añadir libros sin ISBN (busqueda + manual)
 
-| Archivo | Descripción |
-|---------|-------------|
-| `Barrioteca Acalencá.apk` | APK firmada para instalar directamente |
-| `Barrioteca Acalencá.aab` | Android App Bundle para Google Play |
-| `signing.keystore` | Certificado de firma (no perder) |
-| `signing-key-info.txt` | Contraseñas del keystore |
+- **Ubicacion en repo:** `SLiMS/anadir-libro.php`
+- **Se sube a:** `/slims/anadir-libro.php`
+- **Acceso:** `https://pelotxo.synology.me/slims/anadir-libro.php`
+- Busca por titulo (+ autor opcional) en Open Library y Google Books
+- Muestra hasta 5 resultados con portada, sinopsis y metadatos
+- Permite seleccionar un resultado, editar los datos y guardar
+- Formulario manual completo: titulo, autoras, editorial, ano, paginas, sinopsis, URL de portada
+- Preview de portada en vivo
+- Soporta libros con o sin ISBN
+- Inserta en `biblio` con `gmd_id=1`, crea autores/editoriales si no existen, indexa
 
-> AVISO: Los archivos `.apk`, `.aab`, `.keystore` y `signing-key-info.txt` **no se suben a GitHub** (`.gitignore`). Guárdalos en local y haz copia de seguridad.
+#### 3. `importar-isbns.php` — Importacion simple de ISBNs (uno por linea)
 
----
+- **Ubicacion en repo:** `PWA/importar-isbns.php`
+- Permite pegar una lista de ISBNs (uno por linea) en un campo de texto
+- Busca y añade cada ISBN usando Google Books + Open Library
+- Util para añadir unos pocos libros sin necesidad de preparar un CSV
 
-## Despliegue rápido
+#### 4. `isbn_lookup.php` — Catalogador original por ISBN
 
-Ver [`PWA/DEPLOYMENT_GUIDE.md`](https://github.com/jesuscastilla/acalenca-barrioteca-app) para despliegue detallado.
+Modulo original de SLiMS que permite catalogar libros automaticamente introduciendo su ISBN:
+- Google Books API
+- Open Library API
+- ISBN España (Ministerio de Cultura)
 
-### PWA (producción en NAS)
+No requiere la extension `php-yaz` ni Z39.50, lo que facilita su uso en NAS Synology.
 
-```bash
-cd PWA
-npm install
-cp api-config.example.php api-config.php   # Configurar Google Books API key + SLiMS URL
-npm run build
-# Subir dist/ y api-proxy.php a /barrioteca/ en el NAS
-```
+### Lenguaje feminizado
 
-### SLiMS (backend)
+La interfaz administrativa y la API usan lenguaje en femenino (socia, autora) para mantener la coherencia con el frontend.
 
-SLiMS se instala en `/slims/` del NAS siguiendo la [guía de instalación en Synology](SLiMS/MANUAL_INSTALL_SYNOLOGY.md).
+## Infraestructura
 
----
+La Barrioteca Acalenca se aloja en un **NAS Synology** que proporciona una nube local encriptada y autogestionada, sin dependencia de servidores externos. El acceso al panel de administracion (DSM) se realiza via `https://pelotxo.synology.me:5001`.
 
-## Funcionalidades
+## Requisitos técnicos
 
-- **Catálogo público**: Todos los libros con portada, sinopsis y metadatos
-- **Escáner de ISBN**: Usa la cámara del móvil para escanear códigos de barras
-- **Identificación de socias**: Cada socia tiene un ID único
-- **Préstamos y devoluciones**: Autogestión desde el móvil
-- **Libros sin ISBN**: Etiquetas imprimibles con código `LIB-XX`
-- **Dashboard personal**: "Mis préstamos" con fechas de vencimiento
+- **PHP** ≥ 8.1 con extensiones: `mysqli`, `pdo_mysql`, `gd`, `curl`, `mbstring`, `intl`, `openssl`, `xml`, `zip`
+- **MariaDB** 10.3+ (o MySQL 5.7+)
+- **Servidor web**: Apache o Nginx (Web Station en Synology)
+- **NAS Synology**: Probado con Web Station, MariaDB 10 y phpMyAdmin
 
----
+## Instalación
 
-## Tecnología
-
-| Componente | Stack |
-|-----------|-------|
-| Frontend PWA | React 19, TypeScript, Vite, Tailwind CSS 4, html5-qrcode |
-| Backend | SLiMS 9.7.2 (PHP 8), MariaDB, API REST |
-| Proxy PHP | api-proxy.php (cURL a SLiMS API) |
-| Android | Trusted Web Activity (PWABuilder) |
-| Infraestructura | NAS Synology, Nginx, Let's Encrypt, PHP-FPM |
-
----
-
-## Documentación
-
-| Archivo | Contenido |
-|---------|-----------|
-| [`CONTEXT.md`](CONTEXT.md) | Contexto completo del proyecto (arquitectura, bugs, flujo de trabajo) |
-| [`GUIA_APK.md`](GUIA_APK.md) | Guía paso a paso para generar la APK y publicar en Google Play |
-| [`ESQUEMA_CONFERENCIA.md`](ESQUEMA_CONFERENCIA.md) | Esquema de conferencia/taller sobre la Barrioteca |
-| `barrioteca-android-app/assetlinks.json` | Digital Asset Links para Trusted Web Activity |
-
----
+Consulta la [guía de instalación en Synology NAS](MANUAL_INSTALL_SYNOLOGY.md) para instrucciones paso a paso.
 
 ## Créditos
 
-Desarrollado por **Peloxi** ([@Pelochochi](https://instagram.com/Pelochochi)) para la **Barrioteca Acalencá**, espacio perteneciente a **Lebeche**, asociación cultural y vecinal de Salobreña (Granada).
-
----
+SLiMS es software libre creado originalmente por el equipo de desarrollo de Senayan (Indonesia).
+Esta instancia esta modificada y mantenida por la Barrioteca Acalenca, un espacio perteneciente a Lebeche, una asociacion cultural y vecinal de Salobrena (Granada). Todo el codigo modificado ha sido desarrollado por Peloxi (Instagram: @Pelochochi).
 
 ## Licencia
 
-[GNU General Public License v3.0](LICENSE) — Software libre para una biblioteca libre.
+GNU General Public License v3.0

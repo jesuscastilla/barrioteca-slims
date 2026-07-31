@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "barrioteca.app.pelotxo",
-        "sha256_cert_fingerprints": ["F2:CB:0F:90:54:F9:34:81:CD:51:0B:49:9E:70:D1:8C:04:B5:F1:52:F3:4F:44:79:47:08:60:E1:30:D0:FA:45"]
-      }
-    }]

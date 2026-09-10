@@ -100,7 +100,10 @@ La interfaz administrativa y la API usan lenguaje en femenino (socia, autora) pa
 
 ## Infraestructura
 
-La Barrioteca Acalenca se aloja en un **NAS Synology** que proporciona una nube local encriptada y autogestionada, sin dependencia de servidores externos. El acceso al panel de administracion (DSM) se realiza via `https://pelotxo.synology.me:5001`.
+La Barrioteca Acalencá se aloja en un **NAS Synology** que proporciona una nube local encriptada y autogestionada, sin dependencia de servidores externos. El acceso al panel de administración (DSM) se realiza vía `https://pelotxo.synology.me:5001`.
+
+- **Acceso local**: SSH en `192.168.50.93` (o `192.168.50.94`), puerto **22**; archivos SMB en `\\192.168.50.94\`.
+- **Código local**: este repositorio está clonado en `G:\GITHUB\SLiMS\`.
 
 ## Requisitos técnicos
 

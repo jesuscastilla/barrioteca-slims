@@ -2,6 +2,14 @@
 
 Esta guía explica cómo instalar SLiMS y la PWA en tu NAS sin utilizar Docker, usando directamente Web Station, MariaDB y PHPMyAdmin.
 
+## Cómo acceder al NAS
+
+- **SSH / SFTP / SCP**: `192.168.50.93` (o `192.168.50.94`), puerto **22**.
+- **SMB (Windows)**: `\\192.168.50.94\` (carpetas compartidas).
+- **Panel DSM**: `https://pelotxo.synology.me:5001`.
+
+Las carpetas web viven en `/volume1/web/` (por ejemplo `/volume1/web/slims/` y `/volume1/web/barrioteca/`).
+
 ## Requisitos Previos
 
 1. **Web Station**: Instalado y configurado con un perfil de PHP 8.1 o superior.

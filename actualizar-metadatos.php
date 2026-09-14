@@ -140,6 +140,49 @@ function metaCoverByIsbn($isbn) {
     return null;
 }
 
+// Portada por ISBN en CEGAL (todostuslibros / static.cegal.es) — convierte GIF a JPG
+function metaCoverByCegal($isbn) {
+    $clean = preg_replace('/[^0-9X]/i', '', $isbn);
+    if (strlen($clean) < 13) return null;
+    $dir = substr($clean, 0, 7);
+    $file = substr($clean, 0, 12);
+    $url = "https://static.cegal.es/imagenes/marcadas/{$dir}/{$file}.gif";
+    list($code, $img) = metaHttpGet($url, 12);
+    if ($code !== 200 || strlen($img) < 5000) return null; // < 5 KB = placeholder (3963 bytes)
+
+    $tmp = tempnam(sys_get_temp_dir(), 'cegal') . '.gif';
+    @file_put_contents($tmp, $img);
+    $gd = @imagecreatefromgif($tmp);
+    @unlink($tmp);
+    if (!$gd) return null;
+
+    $w = imagesx($gd);
+    $h = imagesy($gd);
+    $canvas = imagecreatetruecolor($w, $h);
+    $white = imagecolorallocate($canvas, 255, 255, 255);
+    imagefill($canvas, 0, 0, $white);
+    imagecopy($canvas, $gd, 0, 0, 0, 0, $w, $h);
+    imagedestroy($gd);
+
+    ob_start();
+    imagejpeg($canvas, null, 85);
+    $jpg = ob_get_clean();
+    imagedestroy($canvas);
+
+    return (strlen($jpg) > 3000) ? $jpg : null;
+}
+
+// Guarda bytes JPG en images/docs/ y devuelve el nombre de archivo (o null)
+function metaSaveBytes($bytes, $hash) {
+    if (empty($bytes) || strlen($bytes) < 3000) return null;
+    $fn = 'cover_' . $hash . '.jpg';
+    $dir = IMGBS . 'docs';
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    if (@file_put_contents($dir . DS . $fn, $bytes)) return $fn;
+    return null;
+}
+
+
 echo ($DRY_RUN ? ">>> MODO SIMULACIÓN (dry-run)\n" : ">>> MODO REAL\n");
 
 // Copia de seguridad de la tabla biblio (solo en modo real)
@@ -183,16 +226,21 @@ while ($row = $q->fetch_assoc()) {
             if ($fn) $newImage = $fn;
         }
         if (!$newImage) {
+            // CEGAL (todostuslibros / static.cegal.es) — portadas de libros españoles
+            if ($DRY_RUN) {
+                $newImage = 'cover_' . $hash . '.jpg (SIM, cegal)';
+            } else {
+                $bytes = metaCoverByCegal($isbn);
+                if ($bytes) $newImage = metaSaveBytes($bytes, $hash);
+            }
+        }
+        if (!$newImage) {
+            // OpenLibrary Covers
             if ($DRY_RUN) {
                 $newImage = 'cover_' . $hash . '.jpg (SIM, covers_openlibrary)';
             } else {
-                $img = metaCoverByIsbn($isbn);
-                if ($img) {
-                    $fn = 'cover_' . $hash . '.jpg';
-                    $dir = IMGBS . 'docs';
-                    if (!is_dir($dir)) @mkdir($dir, 0775, true);
-                    if (@file_put_contents($dir . DS . $fn, $img)) $newImage = $fn;
-                }
+                $bytes = metaCoverByIsbn($isbn);
+                if ($bytes) $newImage = metaSaveBytes($bytes, $hash);
             }
         }
     }

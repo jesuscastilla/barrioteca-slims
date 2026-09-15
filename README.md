@@ -57,7 +57,7 @@ La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fu
 
 - **Ubicacion en repo:** `PWA/importar-csv.php`
 - **Se sube a:** `/slims/importar-csv.php`
-- **Acceso:** `https://pelotxo.synology.me/slims/importar-csv.php`
+- **Acceso:** `https://corrientelebeche.es/slims/importar-csv.php`
 - Sube un archivo CSV con ISBNs escaneados y los procesa por lotes de 3 libros
 - Avance automatico entre lotes con cuenta atras de 5 segundos (evita timeout 504)
 - Consulta Open Library (gratis) y Google Books como fuentes de metadatos
@@ -69,7 +69,7 @@ La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fu
 
 - **Ubicacion en repo:** `SLiMS/anadir-libro.php`
 - **Se sube a:** `/slims/anadir-libro.php`
-- **Acceso:** `https://pelotxo.synology.me/slims/anadir-libro.php`
+- **Acceso:** `https://corrientelebeche.es/slims/anadir-libro.php`
 - Busca por titulo (+ autor opcional) en Open Library y Google Books
 - Muestra hasta 5 resultados con portada, sinopsis y metadatos
 - Permite seleccionar un resultado, editar los datos y guardar

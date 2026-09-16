@@ -3,7 +3,7 @@
  * Añadir Libro sin ISBN - Barrioteca Acalenca
  * 
  * ATENCION: Sube este archivo a /slims/anadir-libro.php (NO a /barrioteca/)
- * Accede a: https://pelotxo.synology.me/slims/anadir-libro.php
+ * Accede a: https://www.corrientelebeche.es/slims/anadir-libro.php
  * 
  * Permite añadir libros sin ISBN buscando por titulo/autor en APIs
  * o introduciendo los datos manualmente.

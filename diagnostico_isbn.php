@@ -8,7 +8,7 @@
  * 
  * CÓMO USARLO:
  * 1. Sube este archivo al mismo directorio donde está SLiMS (junto a index.php)
- * 2. Ábrelo en el navegador: https://tu-nas.synology.me/slims/diagnostico_isbn.php
+ * 2. Ábrelo en el navegador: https://www.corrientelebeche.es/slims/diagnostico_isbn.php
  * 3. Los resultados se mostrarán en pantalla con colores (verde = OK, rojo = ERROR)
  * 
  * @author    Barrioteca Acalencá

@@ -3,7 +3,7 @@
  * 📚 IMPORTAR CSV — Barrioteca Acalencá (por lotes)
  * 
  * ⚠️ SUBE ESTE ARCHIVO A /slims/importar-csv.php (NO a /barrioteca/)
- * Accede a: https://pelotxo.synology.me/slims/importar-csv.php
+ * Accede a: https://www.corrientelebeche.es/slims/importar-csv.php
  * 
  * Permite subir un archivo CSV con ISBNs y los importa a SLiMS
  * por lotes de 3 libros para evitar timeout 504.

@@ -39,7 +39,12 @@ class BiblioController extends Controller
         $cache_name = 'biblio_popular';
         if (!is_null($json = Cache::get($cache_name))) return parent::withJson($json);
 
-        $limit = $this->sysconf['template']['classic_popular_collection_item'];
+        // 'classic_popular_collection_item' es un setting del template "classic";
+        // si no existe (template custom de la Barrioteca) no generamos un `LIMIT `
+        // vacío (SQL inválido -> 500). Valor por defecto: 10.
+        $limit = (int)($this->sysconf['template']['classic_popular_collection_item'] ?? 10);
+        if ($limit < 1) $limit = 10;
+
         $sql = "SELECT b.biblio_id, b.title, b.image, COUNT(*) AS total
           FROM loan AS l
           LEFT JOIN item AS i ON l.item_code=i.item_code
@@ -51,25 +56,32 @@ class BiblioController extends Controller
 
         $query = $this->db->query($sql);
         $return = array();
-        while ($data = $query->fetch_assoc()) {
-            $data['image'] = $this->getImagePath($data['image']);
-            $return[] = $data;
-        }
-        if ($query->num_rows < $limit) {
-            $a_not_in = array ();
-            foreach ($return as $k => $v) {
-                $a_not_in[$k] = $v['biblio_id'];
-            }
-            $not_in = '('.implode(', ', $a_not_in).')';
-            $need = $limit - $query->num_rows;
-            if ($need < 0) {
-                $need = $limit;
-            }
-            $sql = "SELECT biblio_id, title, image FROM biblio WHERE opac_hide < 1 AND biblio_id NOT IN ".$not_in." ORDER BY last_update DESC LIMIT {$need}";
-            $query = $this->db->query($sql);
+        if ($query) {
             while ($data = $query->fetch_assoc()) {
                 $data['image'] = $this->getImagePath($data['image']);
                 $return[] = $data;
+            }
+        }
+
+        $num_rows = $query ? (int)$query->num_rows : 0;
+        if ($num_rows < $limit) {
+            $a_not_in = array();
+            foreach ($return as $v) {
+                $a_not_in[] = (int)$v['biblio_id'];
+            }
+            $need = $limit - $num_rows;
+            $sql = "SELECT biblio_id, title, image FROM biblio WHERE opac_hide < 1";
+            // Evita `NOT IN ()` (SQL inválido) cuando no hay préstamos.
+            if (count($a_not_in) > 0) {
+                $sql .= " AND biblio_id NOT IN (".implode(', ', $a_not_in).")";
+            }
+            $sql .= " ORDER BY last_update DESC LIMIT {$need}";
+            $query = $this->db->query($sql);
+            if ($query) {
+                while ($data = $query->fetch_assoc()) {
+                    $data['image'] = $this->getImagePath($data['image']);
+                    $return[] = $data;
+                }
             }
         }
 

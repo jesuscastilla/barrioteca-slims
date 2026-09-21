@@ -55,6 +55,7 @@ $router->map('GET', '/item/[*:isbn]/status', 'CirculationController@getItemStatu
 $router->map('POST', '/loan/borrow', 'CirculationController@createLoan');
 $router->map('POST', '/loan/return', 'CirculationController@returnLoan');
 $router->map('GET', '/biblio/search', 'BiblioController@search');
+$router->map('GET', '/biblio/[*:id]', 'BiblioController@getDetail');
 
 /*----------  Custom route based on hook plugin  ----------*/
 \SLiMS\Plugins::getInstance()->execute('custom_api_route', ['router' => $router]);

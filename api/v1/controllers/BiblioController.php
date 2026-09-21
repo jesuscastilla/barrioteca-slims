@@ -161,32 +161,41 @@ class BiblioController extends Controller
             return;
         }
 
-        $safe_q = $this->db->real_escape_string($q);
-        $limit = isset($_GET['_limit']) ? (int)$_GET['_limit'] : 30;
+        $limit = isset($_GET['_limit']) ? max(1, min(1000, (int)$_GET['_limit'])) : 30;
+        $offset = isset($_GET['_offset']) ? max(0, (int)$_GET['_offset']) : 0;
 
+        // 'q' vacío o el comodín '_' (usado por la PWA para listar todo el catálogo)
+        // no debe generar un LIKE: '_' es comodín en SQL y produciría un full scan.
+        $isWildcard = ($q === '_');
+        $where = 'b.opac_hide < 1';
+        if (!$isWildcard) {
+            $safe_q = $this->db->real_escape_string($q);
+            $where .= " AND (
+                b.title        LIKE '%{$safe_q}%' OR
+                a.author_name  LIKE '%{$safe_q}%' OR
+                b.isbn_issn    LIKE '%{$safe_q}%'
+            )";
+        }
+
+        // Filtramos is_return = 0 en el propio JOIN para no recorrer todo el
+        // histórico de préstamos en cada listado.
         $sql = "SELECT
                     b.biblio_id,
                     b.title,
                     COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), 'Autora Desconocida') AS author,
                     b.isbn_issn,
                     b.image,
-                    b.notes,
                     MIN(i.item_code) AS item_code,
-                    SUM(CASE WHEN l.is_return = 0 AND l.loan_id IS NOT NULL THEN 1 ELSE 0 END) AS active_loans
+                    SUM(CASE WHEN l.loan_id IS NOT NULL THEN 1 ELSE 0 END) AS active_loans
                 FROM biblio b
                 LEFT JOIN item i ON b.biblio_id = i.biblio_id
-                LEFT JOIN loan l ON i.item_code = l.item_code
+                LEFT JOIN loan l ON i.item_code = l.item_code AND l.is_return = 0
                 LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id
                 LEFT JOIN mst_author a ON ba.author_id = a.author_id
-                WHERE
-                    b.opac_hide < 1 AND (
-                        b.title        LIKE '%{$safe_q}%' OR
-                        a.author_name  LIKE '%{$safe_q}%' OR
-                        b.isbn_issn    LIKE '%{$safe_q}%'
-                    )
+                WHERE {$where}
                 GROUP BY b.biblio_id
                 ORDER BY b.last_update DESC
-                LIMIT {$limit}";
+                LIMIT {$offset}, {$limit}";
 
         $query = $this->db->query($sql);
         $results = [];
@@ -199,7 +208,6 @@ class BiblioController extends Controller
                     'author'       => $data['author'] ?: 'Autora Desconocida',
                     'isbn_issn'    => $data['isbn_issn'],
                     'image'        => $this->getImagePath($data['image']),
-                    'notes'        => $data['notes'] ?? '',
                     'item_code'    => $data['item_code'],
                     'is_available' => ((int)$data['active_loans'] === 0),
                 ];
@@ -207,5 +215,34 @@ class BiblioController extends Controller
         }
 
         parent::withJson($results);
+    }
+
+    /**
+     * Detalle de un único título (sinopsis completa + portada) para el modal
+     * de la PWA. Evita mandar 'notes' de todos los libros en cada listado.
+     *
+     * @param string $id
+     * @return void
+     */
+    public function getDetail(string $id)
+    {
+        $id = (int)$id;
+        if ($id <= 0) {
+            parent::withJson([]);
+            return;
+        }
+
+        $sql = "SELECT b.biblio_id, b.title, b.notes, b.image, b.isbn_issn
+                FROM biblio b
+                WHERE b.biblio_id = {$id} AND b.opac_hide < 1
+                LIMIT 1";
+
+        $query = $this->db->query($sql);
+        if ($query && $data = $query->fetch_assoc()) {
+            $data['image'] = $this->getImagePath($data['image']);
+            parent::withJson($data);
+        } else {
+            parent::withJson([]);
+        }
     }
 }

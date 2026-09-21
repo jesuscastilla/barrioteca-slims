@@ -12,6 +12,7 @@ use Minigalnano\Thumb;
 use SLiMS\Filesystems\Storage;
 
 define('INDEX_AUTH', '1');
+define('THUMB_HEADER_CACHE', true); // Cache-Control: max-age=86400 en miniaturas (reduce carga PHP)
 include __DIR__ . '/../../sysconfig.inc.php';
 
 try {

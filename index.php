@@ -89,8 +89,8 @@ if ($q) {
     <span class="mono">Catalogo publico</span>
   </div>
   <div class="btns">
-    <a href="index.php?p=login" class="btn btn-member">Socias</a>
-    <a href="admin/" class="btn btn-staff">Staff</a>
+    <a href="/barrioteca/" class="btn btn-member">Socias</a>
+    <a href="index.php?p=login" class="btn btn-staff">Staff</a>
   </div>
 </div>
 

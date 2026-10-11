@@ -10,7 +10,7 @@ SLiMS es el software de gestión bibliotecaria que usamos como backend. Aquí se
 - Los ejemplares y su estado (disponible / prestado)
 - El histórico de préstamos y devoluciones
 
-Sobre esta base de datos se apoya la aplicación (PWA) que usan las socias desde el móvil. (https://github.com/jesuscastilla/acalenca-barrioteca-app)
+Sobre esta base de datos se apoya la aplicación (PWA) que usan las socias desde el móvil. (https://github.com/jesuscastilla/barrioteca-web)
 
 ## Cómo funciona la autogestión
 
@@ -55,7 +55,7 @@ La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fu
 
 #### 1. `importar-csv.php` — Importacion masiva por ISBN (por lotes)
 
-- **Ubicacion en repo:** `PWA/importar-csv.php`
+- **Ubicacion en repo:** `barrioteca-web/importar-csv.php`
 - **Se sube a:** `/slims/importar-csv.php`
 - **Acceso:** `https://www.corrientelebeche.es/slims/importar-csv.php`
 - Sube un archivo CSV con ISBNs escaneados y los procesa por lotes de 3 libros
@@ -67,7 +67,7 @@ La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fu
 
 #### 2. `anadir-libro.php` — Añadir libros sin ISBN (busqueda + manual)
 
-- **Ubicacion en repo:** `SLiMS/anadir-libro.php`
+- **Ubicacion en repo:** `barrioteca-slims/anadir-libro.php`
 - **Se sube a:** `/slims/anadir-libro.php`
 - **Acceso:** `https://www.corrientelebeche.es/slims/anadir-libro.php`
 - Busca por titulo (+ autor opcional) en Open Library y Google Books
@@ -80,7 +80,7 @@ La Barrioteca dispone de varios scripts para añadir libros al catalogo desde fu
 
 #### 3. `importar-isbns.php` — Importacion simple de ISBNs (uno por linea)
 
-- **Ubicacion en repo:** `PWA/importar-isbns.php`
+- **Ubicacion en repo:** `barrioteca-web/importar-isbns.php`
 - Permite pegar una lista de ISBNs (uno por linea) en un campo de texto
 - Busca y añade cada ISBN usando Google Books + Open Library
 - Util para añadir unos pocos libros sin necesidad de preparar un CSV
@@ -103,7 +103,7 @@ La interfaz administrativa y la API usan lenguaje en femenino (socia, autora) pa
 La Barrioteca Acalencá se aloja en un **NAS Synology** que proporciona una nube local encriptada y autogestionada, sin dependencia de servidores externos. El acceso al panel de administración (DSM) se realiza vía `https://pelotxo.synology.me:5001`.
 
 - **Acceso local**: SSH en `192.168.50.93` (o `192.168.50.94`), puerto **22**; archivos SMB en `\\192.168.50.94\`.
-- **Código local**: este repositorio está clonado en `G:\GITHUB\SLiMS\`.
+- **Código local**: este repositorio está clonado en `G:\GITHUB\barrioteca-slims\`.
 
 ## Requisitos técnicos
 

@@ -73,10 +73,81 @@ trait Guard
     public function isImageFile()
     {
         if (!$this->uploadStatus) return false;
-        $this->uploadStatus = exif_imagetype($this->path.$this->uploadedFile);
+
+        // The 'exif' PHP extension is not always enabled (e.g. Synology Web Station
+        // PHP 8.2 profiles). Fall back to getimagesize() so image uploads never
+        // crash with "Call to undefined function exif_imagetype()".
+        if (\function_exists('exif_imagetype')) {
+            $this->uploadStatus = @\exif_imagetype($this->path.$this->uploadedFile);
+        } else {
+            $this->uploadStatus = false;
+            $info = @\getimagesize($this->path.$this->uploadedFile);
+            if ($info !== false && isset($info[2])) {
+                $this->uploadStatus = $info[2]; // IMAGETYPE_* constant
+            }
+        }
+
         if (!$this->uploadStatus) {
             $this->error =  __('Wrong image filetype.');
         }
+        return $this->uploadStatus;
+    }
+
+    /**
+     * Sanitize image by regenerating it using PHP-GD
+     * to clean potential data tampering or embedded scripts.
+     * @return boolean
+     */
+    public function sanitizeImageWithGD()
+    {
+        if (!$this->uploadStatus) return false;
+
+        $file_path = $this->path . $this->uploadedFile;
+        $mime = mime_content_type($file_path);
+        $img = false;
+
+        if (!extension_loaded('gd')) {
+            $this->uploadStatus = false;
+            $this->error = __('PHP GD extension is not loaded, image sanitization failed.');
+            return $this->uploadStatus;
+        }
+
+        switch ($mime) {
+            case 'image/jpeg':
+            case 'image/jpg':
+                $img = @imagecreatefromjpeg($file_path);
+                if ($img) {
+                    imagejpeg($img, $file_path, 90);
+                }
+                break;
+            case 'image/png':
+                $img = @imagecreatefrompng($file_path);
+                if ($img) {
+                    imagealphablending($img, false);
+                    imagesavealpha($img, true);
+                    imagepng($img, $file_path, 9);
+                }
+                break;
+            case 'image/gif':
+                $img = @imagecreatefromgif($file_path);
+                if ($img) {
+                    imagegif($img, $file_path);
+                }
+                break;
+            default:
+                return $this->uploadStatus;
+        }
+
+        if ($img === false) {
+             $this->uploadStatus = false;
+             $this->error = __('Failed to process image with GD (possible data tampering or invalid file structure).');
+             return $this->uploadStatus;
+        }
+
+        if (isset($img)) {
+            imagedestroy($img);
+        }
+
         return $this->uploadStatus;
     }
 

@@ -22,6 +22,7 @@ config/sysconfig.local.inc.php
 sysconfig.inc.php
 slims8_akasia.sublime-project
 slims8_akasia.sublime-workspace
+.env
 
 plugins/*
 !plugins/read_counter/
@@ -66,18 +67,19 @@ tarsius
 # Logs de desarrollo
 *.log
 
-# Scripts de diagnóstico (contienen rutas e ISBNs)
+# Scripts de diagnostico (contienen rutas e ISBNs)
 diagnostico_isbn.php
 CHANGELOG_*.log
 
-# Proxy obsoleto (el real está en la PWA)
+# Proxy obsoleto (el real esta en la PWA)
 api-proxy.php
-
-# Composer lock (privado)
-composer.lock
 
 # Docker development files
 docker-compose.yml
 Dockerfile
 entrypoint.sh
 .dockerignore
+
+# Datos de ejecucion de SLiMS (importaciones y subidas de imagenes)
+_slims_import_*.json
+images/*.png

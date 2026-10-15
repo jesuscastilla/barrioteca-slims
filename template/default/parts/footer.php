@@ -40,7 +40,6 @@
                     <li><a class="text-light" href="index.php?p=services"><?= __('Services'); ?></a></li>
                     <li><a class="text-light" href="index.php?p=librarian"><?= __('Librarian'); ?></a></li>
                     <li><a class="text-light" href="index.php?p=member"><?= __('Member Area'); ?></a></li>
-                    <li><a class="text-light" href="admin/index.php"><i class="fas fa-lock mr-1"></i><?= __('Librarian Login'); ?></a></li>
                 </ul>
             </div>
             <div class="col-md-5 pt-8 md:pt-0">
@@ -68,17 +67,17 @@
                     </div>
                 </form>
                 <hr>
-                <a target="_blank" title="Instagram" class="btn btn-outline-info mb-2"
-                   href="https://www.instagram.com/lebeche.cultura/"><i
-                            class="fab fa-instagram mr-2"></i>@lebeche.cultura</a>
-                <a target="_blank" title="Asociación Lebeche" class="btn btn-outline-light mb-2"
-                   href="#"><i
-                            class="fas fa-globe mr-2"></i>Asociaci&oacute;n Lebeche</a>
+                <a target="_blank" title="Support Us" class="btn btn-outline-success mb-2"
+                   href="https://slims.web.id/web/pages/support-us/"><i
+                            class="fas fa-heart mr-2"></i><?= __('Keep SLiMS Alive'); ?></a>
+                <a target="_blank" title="Contribute" class="btn btn-outline-light mb-2"
+                   href="https://github.com/slims/"><i
+                            class="fab fa-github mr-2"></i><?= __('Want to Contribute?'); ?></a>
             </div>
         </div>
         <hr>
         <div class="flex font-thin text-sm">
-            <p class="flex-1">&copy; <?php echo date('Y'); ?> &mdash; Biblioteca de Acalenc&aacute; &mdash; Asociaci&oacute;n Lebeche</p>
+            <p class="flex-1">&copy; <?php echo date('Y'); ?> &mdash; Senayan Developer Community</p>
             <div class="flex-1 text-right text-grey"><?= __('Powered by '); ?><code>SLiMS</code></div>
         </div>
     </div>
@@ -93,52 +92,6 @@
 <?php
 // Chat Engine
 include LIB . "contents/chat.php"; ?>
-
-<!-- // Floating Admin Button -->
-<a href="admin/index.php" class="float-admin-btn" title="Acceso de bibliotecario / administrador">
-    <i class="fas fa-user-lock"></i>
-    <span>Bibliotecario</span>
-</a>
-<style>
-.float-admin-btn {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    background: #2c3e50;
-    color: #fff;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    z-index: 9999;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 22px;
-}
-.float-admin-btn:hover {
-    background: #1a252f;
-    color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-}
-.float-admin-btn span {
-    display: none;
-    background: #2c3e50;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    position: absolute;
-    right: 65px;
-    white-space: nowrap;
-    font-family: sans-serif;
-}
-.float-admin-btn:hover span {
-    display: block;
-}
-</style>
 
 <!-- // Load modal -->
 <?php include "_modal_topic.php"; ?>

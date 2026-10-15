@@ -9,7 +9,7 @@
     <li><a href="index.php?p=member"><?php echo __('Member Area'); ?></a></li>
     <li><a href="index.php?p=librarian"><?php echo __('Librarian'); ?></a></li>
     <li><a href="index.php?p=help"><?php echo __('Help on Search'); ?></a></li>
-    <li><a href="admin/index.php"><?php echo __('Librarian Login'); ?></a></li>
+    <li><a href="index.php?p=login"><?php echo __('Librarian LOGIN'); ?></a></li>
     <li><a href="index.php?p=slimsinfo"><?php echo __('About SLiMS'); ?></a></li>
   </ul>
 

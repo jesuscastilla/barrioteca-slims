@@ -255,22 +255,43 @@ jQuery.fn.registerAdminEvents = function(params) {
   // Enhanced form submission with loader
   $container.off('submit.submitExec').on('submit.submitExec', 'form[target="submitExec"]', function() {
     $('.loader').show();
+    // Safety net: never leave the loader stuck if the iframe 'load' event
+    // never fires (e.g. the server drops the connection behind the proxy).
+    clearTimeout(window.__submitExecLoaderTimeout);
+    window.__submitExecLoaderTimeout = setTimeout(function() {
+      $('.loader').hide();
+    }, 60000);
     return true;
   });
 
-  // Enhanced iframe debug handler
-  const iframe = $container.find('iframe#submitExec')[0];
-  if (iframe) {
-    iframe.addEventListener('load', function() {
+  // Enhanced submitExec iframe handler
+  // The production iframe only has name="submitExec" (no id), so match by name too.
+  // Always hide the loader when the iframe finishes loading, and surface
+  // PHP fatal/parse errors instead of silently freezing the UI.
+  const submitExecIframe = $container.find('iframe[name="submitExec"], iframe#submitExec')[0];
+  if (submitExecIframe) {
+    submitExecIframe.addEventListener('load', function() {
+      clearTimeout(window.__submitExecLoaderTimeout);
+      $('.loader').hide();
       try {
         const iframeDoc = this.contentDocument || this.contentWindow.document;
-        if (iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.trim()) {
-          $container.find('details.debug')
-            .removeClass('debug-empty')
-            .prop('open', true);
-          
-          // Set iframe height dynamically
-          this.style.height = iframeDoc.body.scrollHeight + 'px';
+        if (iframeDoc && iframeDoc.body) {
+          const iframeBody = iframeDoc.body.innerHTML || '';
+          // debug box (development only)
+          if (iframeBody.trim()) {
+            $container.find('details.debug')
+              .removeClass('debug-empty')
+              .prop('open', true);
+            this.style.height = iframeDoc.body.scrollHeight + 'px';
+          }
+          // Detect PHP fatal / parse errors returned inside the iframe
+          if (/Fatal error|Parse error|Uncaught|Stack trace/i.test(iframeBody)) {
+            if (window.toastr) {
+              window.toastr.error('Ocurrió un error del servidor al guardar. Revisa el log de PHP.', 'Error al guardar');
+            } else {
+              alert('Ocurrió un error del servidor al guardar. Revisa el log de PHP.');
+            }
+          }
         }
       } catch (error) {
         console.warn('Cannot access iframe content:', error);
@@ -843,7 +864,7 @@ $(() => {
             opacity: 0,
             display: 'block'
           }).animate({
-            left: `${leftPos + 50}px`,
+            left: `${leftPos + 0}px`,
             opacity: 1
           }, 300);
         },

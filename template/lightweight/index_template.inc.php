@@ -304,51 +304,5 @@ include "partials/bg.php";
   });
 </script>
 
-<!-- // Floating Admin Button -->
-<a href="admin/index.php" class="float-admin-btn" title="Acceso de bibliotecario / administrador">
-    <i class="fas fa-user-lock"></i>
-    <span>Bibliotecario</span>
-</a>
-<style>
-.float-admin-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #2c3e50;
-    color: #fff;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    z-index: 9999;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 22px;
-}
-.float-admin-btn:hover {
-    background: #1a252f;
-    color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-}
-.float-admin-btn span {
-    display: none;
-    background: #2c3e50;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    position: absolute;
-    right: 65px;
-    white-space: nowrap;
-    font-family: sans-serif;
-}
-.float-admin-btn:hover span {
-    display: block;
-}
-</style>
-
 </body>
 </html>

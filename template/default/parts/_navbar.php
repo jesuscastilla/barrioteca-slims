@@ -23,15 +23,11 @@ $main_menus = [
     'text' => __('Help'),
     'url' => 'index.php?p=help'
   ],
-	  'librarian' => [
-	    'text' => __('Librarian'),
-	    'url' => 'index.php?p=librarian'
-	  ],
-	  'admin' => [
-	    'text' => '<i class=\"fas fa-lock\"></i> ' . __('Librarian Login'),
-	    'url' => 'admin/index.php'
-	  ]
-	];
+  'librarian' => [
+    'text' => __('Librarian'),
+    'url' => 'index.php?p=librarian'
+  ]
+];
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
     <a class="navbar-brand inline-flex items-center" href="index.php">

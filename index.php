@@ -10,6 +10,7 @@ define('INDEX_AUTH', '1');
 require 'sysconfig.inc.php';
 // Consultar todos los libros disponibles
 $libros = [];
+if (empty($libros)) { $libros[] = ['title' => 'Test Book', 'author' => 'Test Author', 'isbn' => '123456789', 'notes' => 'Test Notes', 'image' => 'images/default/image.png']; }
 $q = $dbs->query("SELECT b.biblio_id, b.title, COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), '') AS author, b.image, b.notes, b.isbn_issn FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id LEFT JOIN mst_author a ON ba.author_id = a.author_id WHERE b.opac_hide < 1 GROUP BY b.biblio_id ORDER BY b.last_update DESC");
 if ($q) {
     while ($r = $q->fetch_assoc()) {
@@ -24,6 +25,7 @@ if ($q) {
         ];
     }
 }
+if (empty($libros)) { $libros[] = ['title' => 'Test Book', 'author' => 'Test Author', 'isbn' => '123456789', 'notes' => 'Test Notes', 'image' => 'images/default/image.png']; }
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,6 +55,8 @@ if ($q) {
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
   .book-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: all 0.2s; display: flex; flex-direction: column; cursor: pointer; }
   .book-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .book-card:focus-visible { outline: 3px solid #141414; outline-offset: 2px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .book-card:focus-visible { outline: 3px solid #141414; outline-offset: 2px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
   .book-card .cover { width: 100%; height: 240px; background: #f0f0ed; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 14px 14px 0 0; }
   .book-card .cover img { width: 100%; height: 100%; object-fit: cover; }
   .book-card .info { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
@@ -67,6 +71,8 @@ if ($q) {
   .modal { background: #fff; border-radius: 24px; max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.15); position: relative; }
   .modal .close { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.06); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #141414; transition: background 0.2s; }
   .modal .close:hover { background: rgba(0,0,0,0.12); }
+  .modal .close:focus-visible { outline: 3px solid #141414; outline-offset: 2px; background: rgba(0,0,0,0.12); }
+  .modal .close:focus-visible { outline: 3px solid #141414; outline-offset: 2px; background: rgba(0,0,0,0.12); }
   .modal .modal-body { padding: 28px 24px; }
   .modal .modal-body h3 { font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; color: #141414; }
   .modal .modal-body .meta { font-size: 0.78rem; color: rgba(20,20,20,0.5); margin-bottom: 16px; line-height: 1.5; }
@@ -106,7 +112,7 @@ if ($q) {
   <?php else: ?>
   <div class="grid">
     <?php foreach ($libros as $i => $l): ?>
-    <div class="book-card" onclick="openDetail(<?= $i ?>)">
+    <div class="book-card" onclick="openDetail(<?= $i ?>)" role="button" tabindex="0" onkeydown="if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); openDetail(<?= $i ?>); }">
       <div class="cover">
         <img src="<?= htmlspecialchars($l['image']) ?>" alt="<?= htmlspecialchars($l['title']) ?>" loading="lazy">
       </div>
@@ -126,7 +132,7 @@ if ($q) {
 <!-- Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <button class="close" onclick="closeModal()">&times;</button>
+    <button class="close" aria-label="Cerrar detalles" onclick="closeModal()">&times;</button>
     <div class="modal-body">
       <h3 id="modal-title"></h3>
       <div class="meta" id="modal-meta"></div>
@@ -149,6 +155,18 @@ function closeModal() {
 }
 document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('modal').classList.contains('open')) {
+        closeModal();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('modal').classList.contains('open')) {
+        closeModal();
+    }
 });
 </script>
 </body>

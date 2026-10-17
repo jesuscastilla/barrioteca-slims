@@ -1,0 +1,3 @@
+## 2023-10-18 - Full Table Load on Index
+**Learning:** The public-facing catalog (`index.php`) was loading the entire `biblio` table (all books) into a single PHP array, generating thumbnails for each synchronously, and outputting the entire dataset into a JSON blob within the HTML. For large library databases, this causes severe PHP memory exhaustion, slow page generation (due to `createthumb.php` execution per image), and blocks the main UI thread when parsing the massive JSON.
+**Action:** Always paginate public-facing lists and defer expensive operations (like thumbnail generation) to when they are needed or do it async. Implementing pagination (`LIMIT`/`OFFSET`) drastically cuts down memory use and Time To First Byte (TTFB).

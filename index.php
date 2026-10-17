@@ -8,20 +8,49 @@ if (!empty($_GET)) {
 // Cargar configuracion minima de SLiMS para acceder a la BD
 define('INDEX_AUTH', '1');
 require 'sysconfig.inc.php';
-// Consultar todos los libros disponibles
+// Pagination variables
+$limit = 50;
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$offset = ($page - 1) * $limit;
+
+// Check if Cache class is available
+$hasCache = class_exists('\SLiMS\Cache');
+
+// Consultar total de libros
+$total_libros = 0;
+$cacheKeyTotal = 'opac_total_libros';
+if ($hasCache && !is_null($cachedTotal = \SLiMS\Cache::get($cacheKeyTotal))) {
+    $total_libros = (int)$cachedTotal;
+} else {
+    $q_total = $dbs->query("SELECT COUNT(biblio_id) as total FROM biblio WHERE opac_hide < 1");
+    if ($q_total && $r_total = $q_total->fetch_assoc()) {
+        $total_libros = (int)$r_total['total'];
+        if ($hasCache) \SLiMS\Cache::set($cacheKeyTotal, $total_libros);
+    }
+}
+
+$total_pages = ceil($total_libros / $limit);
+
+// Consultar los libros paginados
 $libros = [];
-$q = $dbs->query("SELECT b.biblio_id, b.title, COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), '') AS author, b.image, b.notes, b.isbn_issn FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id LEFT JOIN mst_author a ON ba.author_id = a.author_id WHERE b.opac_hide < 1 GROUP BY b.biblio_id ORDER BY b.last_update DESC");
-if ($q) {
-    while ($r = $q->fetch_assoc()) {
-        $img = $r['image'] ?? '';
-        $thumb = SWB . 'lib/minigalnano/createthumb.php?filename=' . urlencode($img ? 'images/docs/' . $img : 'images/default/image.png') . '&width=200';
-        $libros[] = [
-            'title' => $r['title'],
-            'author' => $r['author'] ?: 'Autora Desconocida',
-            'isbn' => $r['isbn_issn'] ?? '',
-            'notes' => $r['notes'] ?? '',
-            'image' => $thumb
-        ];
+$cacheKeyLibros = 'opac_libros_page_' . $page;
+if ($hasCache && !is_null($cachedLibros = \SLiMS\Cache::get($cacheKeyLibros))) {
+    $libros = json_decode($cachedLibros, true);
+} else {
+    $q = $dbs->query("SELECT b.biblio_id, b.title, COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), '') AS author, b.image, b.notes, b.isbn_issn FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id LEFT JOIN mst_author a ON ba.author_id = a.author_id WHERE b.opac_hide < 1 GROUP BY b.biblio_id ORDER BY b.last_update DESC LIMIT {$offset}, {$limit}");
+    if ($q) {
+        while ($r = $q->fetch_assoc()) {
+            $img = $r['image'] ?? '';
+            $thumb = SWB . 'lib/minigalnano/createthumb.php?filename=' . urlencode($img ? 'images/docs/' . $img : 'images/default/image.png') . '&width=200';
+            $libros[] = [
+                'title' => $r['title'],
+                'author' => $r['author'] ?: 'Autora Desconocida',
+                'isbn' => $r['isbn_issn'] ?? '',
+                'notes' => $r['notes'] ?? '',
+                'image' => $thumb
+            ];
+        }
+        if ($hasCache) \SLiMS\Cache::set($cacheKeyLibros, json_encode($libros));
     }
 }
 ?>
@@ -73,6 +102,11 @@ if ($q) {
   .modal .modal-body .meta span { display: block; }
   .modal .modal-body .synopsis { font-size: 0.85rem; line-height: 1.7; color: rgba(20,20,20,0.75); white-space: pre-line; }
 
+  .pagination { display: flex; justify-content: center; gap: 12px; margin-top: 40px; }
+  .pagination .page-btn { padding: 10px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; text-decoration: none; color: #141414; background: #fff; border: 1px solid #d5d5d0; transition: all 0.2s; }
+  .pagination .page-btn:hover { background: #e8e8e4; }
+  .pagination .page-btn.disabled { opacity: 0.5; pointer-events: none; }
+
   @media (max-width: 600px) {
     .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
     .book-card .cover { height: 180px; }
@@ -97,8 +131,8 @@ if ($q) {
 <div class="container">
   <h2>
     Catalogo
-    <?php if (!empty($libros)): ?>
-    <span class="count"><?= count($libros) ?> libros</span>
+    <?php if ($total_libros > 0): ?>
+    <span class="count"><?= $total_libros ?> libros</span>
     <?php endif; ?>
   </h2>
   <?php if (empty($libros)): ?>
@@ -120,6 +154,14 @@ if ($q) {
     </div>
     <?php endforeach; ?>
   </div>
+
+  <?php if ($total_pages > 1): ?>
+  <div class="pagination">
+    <a href="?page=<?= max(1, $page - 1) ?>" class="page-btn <?= ($page <= 1) ? 'disabled' : '' ?>">Anterior</a>
+    <a href="?page=<?= min($total_pages, $page + 1) ?>" class="page-btn <?= ($page >= $total_pages) ? 'disabled' : '' ?>">Siguiente</a>
+  </div>
+  <?php endif; ?>
+
   <?php endif; ?>
 </div>
 

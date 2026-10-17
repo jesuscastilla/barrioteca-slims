@@ -98,7 +98,7 @@ if (isset($_POST['saveData']) AND $can_read AND $can_write) {
                 utility::jsToastr(__('Author'),__('Author Data Successfully Updated'),'success');
                 echo '<script type="text/javascript">parent.jQuery(\'#mainContent\').simbioAJAX(parent.jQuery.ajaxHistory[0].url);</script>';
                 if ($in_pop_up) {
-                    echo '<script type="text/javascript">top.setIframeContent(\'authorIframe\', \''.MWB.'bibliography/iframe_author.php?biblioID='.$_GET['biblio_id'].'\');</script>';
+                    echo '<script type="text/javascript">top.setIframeContent(\'authorIframe\', \''.MWB.'bibliography/iframe_author.php?biblioID='.(int)$_GET['biblio_id'].'\');</script>';
                     echo '<script type="text/javascript">top.jQuery.colorbox.close();</script>';
                 } else {
                     echo '<script type="text/javascript">parent.$(\'#mainContent\').simbioAJAX(\''.$_SERVER['PHP_SELF'].'\');</script>';
@@ -114,7 +114,7 @@ if (isset($_POST['saveData']) AND $can_read AND $can_write) {
                 utility::jsToastr(__('Author'),__('New Author Data Successfully Saved'),'success');
                 echo '<script type="text/javascript">parent.jQuery(\'#mainContent\').simbioAJAX(\''.$_SERVER['PHP_SELF'].'\');</script>';
                 if ($in_pop_up) {
-                    echo '<script type="text/javascript">top.setIframeContent(\'authorIframe\', \''.MWB.'bibliography/iframe_author.php?biblioID='.$_GET['biblio_id'].'\');</script>';
+                    echo '<script type="text/javascript">top.setIframeContent(\'authorIframe\', \''.MWB.'bibliography/iframe_author.php?biblioID='.(int)$_GET['biblio_id'].'\');</script>';
                     echo '<script type="text/javascript">top.jQuery.colorbox.close();</script>';
                 } else {
                     echo '<script type="text/javascript">parent.$(\'#mainContent\').simbioAJAX(\''.$_SERVER['PHP_SELF'].'\');</script>';

@@ -95,7 +95,7 @@ if (isset($_POST['saveData']) AND $can_read AND $can_write) {
                 utility::jsToastr(__('Subject'), __('Subject Data Successfully Updated'),'success');
                 echo '<script type="text/javascript">parent.jQuery(\'#mainContent\').simbioAJAX(parent.jQuery.ajaxHistory[0].url);</script>';
                 if ($in_pop_up) {
-                    echo '<script type="text/javascript">top.setIframeContent(\'topicIframe\', \''.MWB.'bibliography/iframe_topic.php?biblioID='.$_GET['biblio_id'].'\');</script>';
+                    echo '<script type="text/javascript">top.setIframeContent(\'topicIframe\', \''.MWB.'bibliography/iframe_topic.php?biblioID='.(int)$_GET['biblio_id'].'\');</script>';
                     echo '<script type="text/javascript">top.jQuery.colorbox.close();</script>';
                 } else {
                     echo '<script type="text/javascript">parent.$(\'#mainContent\').simbioAJAX(\''.$_SERVER['PHP_SELF'].'\');</script>';
@@ -111,7 +111,7 @@ if (isset($_POST['saveData']) AND $can_read AND $can_write) {
                 utility::jsToastr(__('Subject'), __('New Subject Data Successfully Saved'),'success');
                 echo '<script type="text/javascript">parent.$(\'#mainContent\').simbioAJAX(\''.MWB.'master_file/topic.php\', {method: \'post\', addData: \'itemID='.$last_biblio_id.'&detail=true\'});</script>';
                 if ($in_pop_up) {
-                    echo '<script type="text/javascript">top.setIframeContent(\'topicIframe\', \''.MWB.'bibliography/iframe_topic.php?biblioID='.$_GET['biblio_id'].'\');</script>';
+                    echo '<script type="text/javascript">top.setIframeContent(\'topicIframe\', \''.MWB.'bibliography/iframe_topic.php?biblioID='.(int)$_GET['biblio_id'].'\');</script>';
                     echo '<script type="text/javascript">top.jQuery.colorbox.close();</script>';
                 } else {
                     echo '<script type="text/javascript">parent.$(\'#mainContent\').simbioAJAX(\''.$_SERVER['PHP_SELF'].'\');</script>';

@@ -114,8 +114,8 @@
 </div>
 
 <div id="help">
-  <a href="#" name="top" class="s-help d-none"><i class="fa fa-question-circle"></i></a>
-  <a href="#" name="top" class="s-close d-none"><i class="fa fa-times"></i></a>
+  <a href="#" name="top" class="s-help d-none" role="button" aria-label="<?php echo __('Help'); ?>"><i class="fa fa-question-circle"></i></a>
+  <a href="#" name="top" class="s-close d-none" role="button" aria-label="<?php echo __('Close'); ?>"><i class="fa fa-times"></i></a>
   <div class="s-help-content animated fade-in d-none"><!-- Place to put documentation --></div>
 </div>
 

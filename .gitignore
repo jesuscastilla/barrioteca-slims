@@ -83,3 +83,8 @@ entrypoint.sh
 # Datos de ejecucion de SLiMS (importaciones y subidas de imagenes)
 _slims_import_*.json
 images/*.png
+
+# Agente Jules: artefactos y propuestas locales (no versionar)
+.jules/
+jules-*
+PROPUESTAS.md

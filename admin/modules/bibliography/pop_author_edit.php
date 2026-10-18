@@ -69,7 +69,7 @@ else{
 
     /* RECORD FORM */
     $itemID = (integer)isset($_POST['itemID'])?$_POST['itemID']:0;
-    $query = sprintf('SELECT b.biblio_id,ba.author_id,b.title,ma.author_name,ma.authority_type,ba.* FROM biblio b LEFT JOIN biblio_author ba ON ba.biblio_id=ba.biblio_id
+    $query = sprintf('SELECT b.biblio_id,ba.author_id,b.title,ma.author_name,ma.authority_type,ba.* FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id=ba.biblio_id
     LEFT JOIN mst_author ma ON ma.author_id=ba.author_id WHERE b.biblio_id=%d AND ma.author_id=%d', (integer)$_GET['biblio_id'], (integer)$_GET['authorID']);
     $rec_q = $dbs->query($query);
     $rec_d = $rec_q->fetch_assoc();

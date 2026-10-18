@@ -1,6 +1,7 @@
 <?php
-// Si hay parametros GET (login, member, etc), cargar el OPAC original completo
-if (!empty($_GET)) {
+// Si hay parametros GET (login, member, etc), cargar el OPAC original completo (excepto 'page' para paginacion)
+$get_keys = array_keys($_GET);
+if (!empty($_GET) && !($get_keys === ['page'])) {
     require __DIR__ . '/index_opac_original.php';
     exit;
 }
@@ -8,9 +9,23 @@ if (!empty($_GET)) {
 // Cargar configuracion minima de SLiMS para acceder a la BD
 define('INDEX_AUTH', '1');
 require 'sysconfig.inc.php';
-// Consultar todos los libros disponibles
+
+// Paginacion
+$limit = 24;
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$offset = ($page - 1) * $limit;
+
+// Contar total de libros
+$totalLibros = 0;
+$count_query = $dbs->query("SELECT COUNT(*) AS total FROM biblio WHERE opac_hide < 1");
+if ($count_query && $row = $count_query->fetch_assoc()) {
+    $totalLibros = (int)$row['total'];
+}
+$totalPages = ceil($totalLibros / $limit);
+
+// Consultar los libros disponibles con limite
 $libros = [];
-$q = $dbs->query("SELECT b.biblio_id, b.title, COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), '') AS author, b.image, b.notes, b.isbn_issn FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id LEFT JOIN mst_author a ON ba.author_id = a.author_id WHERE b.opac_hide < 1 GROUP BY b.biblio_id ORDER BY b.last_update DESC");
+$q = $dbs->query("SELECT b.biblio_id, b.title, COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), '') AS author, b.image, b.notes, b.isbn_issn FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id LEFT JOIN mst_author a ON ba.author_id = a.author_id WHERE b.opac_hide < 1 GROUP BY b.biblio_id ORDER BY b.last_update DESC LIMIT $offset, $limit");
 if ($q) {
     while ($r = $q->fetch_assoc()) {
         $img = $r['image'] ?? '';
@@ -60,6 +75,12 @@ if ($q) {
   .book-card .author { font-size: 0.7rem; color: rgba(20,20,20,0.5); line-height: 1.3; }
   .book-card .isbn { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: rgba(20,20,20,0.3); margin-top: 2px; }
   .empty { text-align: center; color: rgba(20,20,20,0.3); padding: 60px 0; font-style: italic; font-size: 1rem; }
+
+  /* Paginacion */
+  .pagination { display: flex; justify-content: center; gap: 12px; margin-top: 40px; padding: 20px 0; }
+  .pagination a { padding: 8px 16px; background: #fff; border: 1px solid #d5d5d0; border-radius: 8px; color: #141414; text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; }
+  .pagination a:hover { background: #f0f0ed; }
+  .pagination span { padding: 8px 16px; font-size: 0.8rem; color: rgba(20,20,20,0.5); }
 
   /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
@@ -120,6 +141,25 @@ if ($q) {
     </div>
     <?php endforeach; ?>
   </div>
+
+  <?php if ($totalPages > 1): ?>
+  <div class="pagination">
+    <?php if ($page > 1): ?>
+    <a href="?page=<?= $page - 1 ?>">Anterior</a>
+    <?php else: ?>
+    <span>Anterior</span>
+    <?php endif; ?>
+
+    <span>Pagina <?= $page ?> de <?= $totalPages ?></span>
+
+    <?php if ($page < $totalPages): ?>
+    <a href="?page=<?= $page + 1 ?>">Siguiente</a>
+    <?php else: ?>
+    <span>Siguiente</span>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+
   <?php endif; ?>
 </div>
 

@@ -15,6 +15,13 @@
  * @license   GPL-3.0-or-later
  */
 
+// Cargar SLiMS para requerir autenticación
+define('INDEX_AUTH', '1');
+define('DB_ACCESS', 'fa');
+require __DIR__ . '/sysconfig.inc.php';
+require SB . 'admin/default/session.inc.php';
+require SB . 'admin/default/session_check.inc.php';
+
 // ============================================================================
 // CONFIGURACIÓN
 // ============================================================================

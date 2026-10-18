@@ -854,7 +854,7 @@ $(document).ready(function() {
             echo '</div>';
             if (isset($_GET['numExtended']) AND $_GET['numExtended'] > 0) {
                 echo '<div class="infoBox mt-1">';
-                echo '<strong>'.$_GET['numExtended'].'</strong> '.__('members extended!'); //mfc
+                echo '<strong>'.(int)$_GET['numExtended'].'</strong> '.__('members extended!'); //mfc
                 echo '</div>';
             }
         }

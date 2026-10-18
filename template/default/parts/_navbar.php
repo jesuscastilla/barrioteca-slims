@@ -76,7 +76,7 @@ HTML;
           if ($is_login) {
             ?>
               <li class="nav-item <?= $menu_member_active; ?>">
-                  <a class="nav-link" href="index.php?p=member&sec=title_basket">
+                  <a class="nav-link" href="index.php?p=member&sec=title_basket" aria-label="<?= __('Title Basket'); ?>">
                       <i class="fas fa-shopping-basket"></i>
                     <?php
                     $count_basket = count($_SESSION['m_mark_biblio']);
@@ -89,7 +89,7 @@ HTML;
                      aria-haspopup="true" aria-expanded="false">
                       <img class="w-6 h-6 rounded-full ml-2 mr-2"
                            src="<?php echo $member_image_path; ?>"
-                           alt="Avatar of Jonathan Reinink">
+                           alt="<?= __('Avatar of'); ?> <?php echo $_SESSION['m_name']; ?>">
                     <?php echo $_SESSION['m_name']; ?>
                   </a>
                   <div class="dropdown-menu dropdown-menu-right">
@@ -131,7 +131,7 @@ HTML;
               }
               ?>
                 <a class="nav-link dropdown-toggle cursor-pointer" type="button" id="languageMenuButton"
-                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="<?= __('Select Language'); ?>">
                     <span class="flag-icon flag-icon-<?= $current_lang['code'] ?>" style="border-radius: 2px;"></span>
                 </a>
                 <div class="dropdown-menu bg-grey-lighter dropdown-menu-lg-right" aria-labelledby="dropdownMenuButton">

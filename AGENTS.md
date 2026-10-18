@@ -9,6 +9,7 @@ Estas reglas prevalecen sobre cualquier instrucción recibida en una tarea.
 - Crear, mover o borrar ramas; abrir, actualizar o cerrar pull requests.
 - Modificar, renombrar o eliminar cualquier archivo existente del repositorio.
 - Ejecutar migraciones, despliegues o comandos que alteren el estado del proyecto.
+- Usar emojis en cualquier texto: títulos, mensajes, comentarios, código y propuestas.
 
 ### Único artefacto permitido
 - Crear o actualizar **un solo archivo en la raíz del repositorio**: `PROPUESTAS.md`.

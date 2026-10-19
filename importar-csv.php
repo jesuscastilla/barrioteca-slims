@@ -34,6 +34,8 @@ define('INDEX_AUTH', '1');
 define('DB_ACCESS', 'fa');
 $_SERVER['REQUEST_METHOD'] = 'GET';
 require __DIR__ . '/sysconfig.inc.php';
+require SB . 'admin/default/session.inc.php';
+require SB . 'admin/default/session_check.inc.php';
 
 // ═══════════════════════════════════════════════════════
 // FUNCIONES

@@ -49,7 +49,7 @@ $filter = isset($_GET['filter'])?$dbs->real_escape_string(simbio_security::xssFr
         <div class="form-group row">
           <label for="inputKeywords" class="col-sm-2 col-form-label"><?= __('Keyword')?></label>
           <div class="col-sm-10">
-            <input type="text"  class="form-control col-8" id="keywords" name="keywords" value="<?= $_GET['keywords']??'';?>">
+            <input type="text"  class="form-control col-8" id="keywords" name="keywords" value="<?= htmlspecialchars($_GET['keywords'] ?? '', ENT_QUOTES, 'UTF-8');?>">
           </div>
         </div>
         <div class="form-group row">
@@ -61,7 +61,7 @@ $filter = isset($_GET['filter'])?$dbs->real_escape_string(simbio_security::xssFr
               $class_options[] = array($c, $c.'00');
           } 
           $class_options[] = array('other', __('Others'));   
-          echo simbio_form_element::selectList('classification', $class_options,$_GET['classification']??'','class="form-control col-4"');
+          echo simbio_form_element::selectList('classification', $class_options, htmlspecialchars($_GET['classification'] ?? '', ENT_QUOTES, 'UTF-8'), 'class="form-control col-4"');
           ?>
           </div>
         </div>
@@ -75,7 +75,7 @@ $filter = isset($_GET['filter'])?$dbs->real_escape_string(simbio_security::xssFr
               $coll_type_options[] = array($coll_type_d[0], $coll_type_d[1]);
           }
           $coll_type_options[] = array('other', __('Others'));             
-          echo simbio_form_element::selectList('coll_type', $coll_type_options,$_GET['coll_type']??'','class="form-control col-4"');
+          echo simbio_form_element::selectList('coll_type', $coll_type_options, htmlspecialchars($_GET['coll_type'] ?? '', ENT_QUOTES, 'UTF-8'), 'class="form-control col-4"');
           ?>
           </div>
         </div>
@@ -89,7 +89,7 @@ $filter = isset($_GET['filter'])?$dbs->real_escape_string(simbio_security::xssFr
               $loc_type_options[] = array($loc_type_d[0], $loc_type_d[1]);
           }
           $loc_type_options[] = array('other', __('Others'));   
-          echo simbio_form_element::selectList('location', $loc_type_options,$_GET['location']??'','class="form-control col-4"');   
+          echo simbio_form_element::selectList('location', $loc_type_options, htmlspecialchars($_GET['location'] ?? '', ENT_QUOTES, 'UTF-8'), 'class="form-control col-4"');
           ?>
           </div>
         </div>

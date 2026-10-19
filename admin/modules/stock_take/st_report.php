@@ -177,16 +177,26 @@ if ($stk_query->num_rows < 1) {
         <td class="dataListHeader">'.__('Lost Items').'</td>
         <td class="dataListHeader">'.__('Existing Items').'</td>
         <td class="dataListHeader">'.__('On Loan Items').'</td></tr>';
-    $ct_q = $dbs->query("SELECT DISTINCT coll_type_name FROM stock_take_item");
+    // ⚡ Bolt: Fix N+1 query problem by batching the counts in a single query
+    $ct_q = $dbs->query("SELECT coll_type_name, status, COUNT(item_code) as count FROM stock_take_item GROUP BY coll_type_name, status");
+
+    $counts_by_coll_type = array();
+    while ($ct_d = $ct_q->fetch_assoc()) {
+        $coll_type = $ct_d['coll_type_name'];
+        if (!isset($counts_by_coll_type[$coll_type])) {
+            $counts_by_coll_type[$coll_type] = array('m' => 0, 'e' => 0, 'l' => 0);
+        }
+        $counts_by_coll_type[$coll_type][$ct_d['status']] = $ct_d['count'];
+    }
+
     $row = 1;
-    while ($ct_d = $ct_q->fetch_row()) {
+    foreach ($counts_by_coll_type as $coll_type => $counts) {
         $row_class = ($row%2 == 0)?'alterCell':'alterCell2';
-        $coll_type_count_str .= '<tr><td class="'.$row_class.'"><strong>'.$ct_d[0].'</strong></td>';
+        $coll_type_count_str .= '<tr><td class="'.$row_class.'"><strong>'.$coll_type.'</strong></td>';
         foreach ($arr_status as $status) {
-            $ct_count_q = $dbs->query("SELECT COUNT(item_code) FROM stock_take_item WHERE coll_type_name='".$ct_d[0]."' AND status='$status'");
-            $ct_count_d = $ct_count_q->fetch_row();
+            $count = isset($counts[$status]) ? $counts[$status] : 0;
             // append to string
-            $coll_type_count_str .= '<td class="'.$row_class.'">'.$ct_count_d[0].'</td>';
+            $coll_type_count_str .= '<td class="'.$row_class.'">'.$count.'</td>';
         }
         $coll_type_count_str .= '</tr>';
         $row++;

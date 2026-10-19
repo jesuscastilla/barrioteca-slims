@@ -3,6 +3,7 @@
 Propuestas pendientes de revision, generadas por agentes automaticos. Ninguna entrada esta aplicada; quedan a la espera de revision humana.
 
 ## [2026-10-18 00:58] — PR #1: Bolt: Add pagination and caching to the main catalog index
+> **Estado:** descartado (paginacion rota; sustituida por PR #6)
 
 - **Archivos afectados:** index.php
 - **Motivo:** What: Implemented a 50-item limit with pagination logic and caching fallback (SLiMS\Cache) on index.php. Why: The previous query fetched the entire biblio database table asynchronously on every load, built the whole array of library books, and executed thumbnail generation via createthumb.php synchronously on all image covers, causing high TTFB and out-of-memory errors on large collections. Impact: Significantly limits query rows and PHP array memory usage on initial page loads; reduces thumbnail generation blocking. Measurement: Verify that only up to 50 books load initially, with 'Anterior' and 'Siguiente' links rendering correctly below the list. Observe drastically improved TTFB and lower DB load.
@@ -118,6 +119,7 @@ index 6f29808b..818a5f7f 100644
 ```
 
 ## [2026-10-18 01:02] — PR #2: Sentinel: [HIGH] Fix Reflected XSS vulnerability
+> **Estado:** aplicado
 
 - **Archivos afectados:** admin/modules/circulation/fines_list.php, admin/modules/circulation/member_loan_hist.php, admin/modules/master_file/author.php, admin/modules/master_file/topic.php, admin/modules/membership/index.php, admin/modules/serial_control/subscription.php, admin/modules/system/backup.php, admin/modules/system/holiday.php, admin/modules/system/module.php, admin/modules/system/user_group.php
 - **Motivo:** Severity: HIGH Vulnerability: Reflected Cross-Site Scripting (XSS) via $_GET['keywords'] and other GET parameters directly echoed into HTML without sanitization in administrative lists. Impact: An attacker could inject malicious scripts into the admin sessions by convincing them to click a crafted link containing JavaScript in the keywords or similar query string parameters. Fix: Used htmlspecialchars() for output variables and integer casting (int) for identifiers. Verification: Checked the UI files using grep and run PHP lint.
@@ -276,6 +278,7 @@ index 852ebfe4..98b1755e 100644
 ```
 
 ## [2026-10-18 01:05] — PR #3: Palette: Make book catalog fully accessible to keyboard and screen readers
+> **Estado:** aplicado (reimplementado sin "Test Book")
 
 - **Archivos afectados:** index.php
 - **Motivo:** What: Added aria-label to the modal close button, semantic roles, tabindex and keyboard navigation handlers to the book cards, focus-visible styles, and an Escape keydown handler. Why: Interactive div elements without semantic roles or keyboard events exclude keyboard-only and screen reader users from accessing book details. Before/After: Visual focus states clearly show keyboard navigation. Accessibility: - Book cards are focusable via Tab - Book cards can be activated via Enter or Space - Clear :focus-visible outline added to cards and buttons - Modal close button announces Cerrar detalles to screen readers - Modal can be closed by pressing the Escape key
@@ -362,6 +365,7 @@ index 6f29808b..dfc1409b 100644
 ```
 
 ## [2026-10-18 03:26] — PR #4: Sentinel: [CRITICAL] Fix missing authentication on utility scripts
+> **Estado:** aplicado parcial (solo importar-csv.php)
 
 - **Archivos afectados:** diagnostico_isbn.php, importar-csv.php
 - **Motivo:** Severity: CRITICAL Vulnerability: Unauthenticated access to root-level utility scripts (importar-csv.php and diagnostico_isbn.php). Impact: An attacker could upload arbitrary CSV files to import data into the SLiMS database without logging in, leading to unauthorized data insertion and potential denial of service. They could also access diagnostic information. Fix: Added INDEX_AUTH definition and included sysconfig.inc.php, session.inc.php, and session_check.inc.php to enforce authentication before the scripts are executed. Verification: Attempting to access these endpoints directly via browser or curl without an active session will now properly redirect or deny access, as handled by session_check.inc.php. PHP syntax was validated with php -l.
@@ -403,6 +407,7 @@ index 62b1a9e9..a758f16e 100644
 ```
 
 ## [2026-10-18 03:31] — PR #5: Palette: Improve accessibility of icon-only links and avatar in navbar
+> **Estado:** aplicado
 
 - **Archivos afectados:** admin/admin_template/default/index_template.inc.php, template/default/parts/_navbar.php
 - **Motivo:** What: Added missing accessibility attributes (ARIA labels, roles, dynamic alt text) to navigation and help links. Why: Screen reader users previously heard nothing or inaccurate text when navigating to icon-only elements like the title basket, language select, or help buttons. Also fixes a hardcoded dummy avatar alt text. Before/After: Visuals remain unchanged; only the underlying accessibility tree is affected. Accessibility: Ensures that interactive elements and images can be properly interpreted by screen readers.
@@ -459,6 +464,7 @@ index 2b4e99d3..f7428f88 100644
 ```
 
 ## [2026-10-18 03:43] — PR #6: Bolt: add pagination to index and fix cartesian join on admin page
+> **Estado:** aplicado
 
 - **Archivos afectados:** admin/modules/bibliography/pop_author_edit.php, index.php
 - **Motivo:** What: 1. Added pagination to index.php. The query now limits the result set using LIMIT $offset, 24 instead of fetching everything. 2. Corrected a Cartesian product bug in admin/modules/bibliography/pop_author_edit.php by modifying ON ba.biblio_id=ba.biblio_id to ON b.biblio_id=ba.biblio_id. Why: 1. index.php was fetching the entire database sequentially causing an $O(N)$ memory and rendering bottleneck. 2. The Cartesian product caused duplicate rows to be scanned unnecessarily over the relation mapping slowing down admin functionalities. Impact: 1. Drastically reduces database query time, server memory payload size, DOM size limit, and network latency at rendering index.php. 2. Restored correct row matching performance inside pop_author_edit.php in the admin dashboard by bypassing unnecessary join scans. Measurement: Verify memory utilization drops when using index.php and verify correct JOIN semantics logic in pop_author_edit.php.

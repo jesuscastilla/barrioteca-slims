@@ -67,18 +67,18 @@
                     </div>
                 </form>
                 <hr>
-                <a target="_blank" title="Support Us" class="btn btn-outline-success mb-2"
-                   href="https://slims.web.id/web/pages/support-us/"><i
-                            class="fas fa-heart mr-2"></i><?= __('Keep SLiMS Alive'); ?></a>
-                <a target="_blank" title="Contribute" class="btn btn-outline-light mb-2"
-                   href="https://github.com/slims/"><i
-                            class="fab fa-github mr-2"></i><?= __('Want to Contribute?'); ?></a>
+                <a target="_blank" title="Web de Lebeche" class="btn btn-outline-light mb-2"
+                   href="https://www.corrientelebeche.es/lebeche/"><i
+                            class="fas fa-globe mr-2"></i>Web de Lebeche</a>
+                <a target="_blank" title="Instagram" class="btn btn-outline-light mb-2"
+                   href="https://www.instagram.com/acalenca/"><i
+                            class="fab fa-instagram mr-2"></i>Instagram</a>
             </div>
         </div>
         <hr>
         <div class="flex font-thin text-sm">
-            <p class="flex-1">&copy; <?php echo date('Y'); ?> &mdash; Senayan Developer Community</p>
-            <div class="flex-1 text-right text-grey"><?= __('Powered by '); ?><code>SLiMS</code></div>
+            <p class="flex-1">&copy; <?php echo date('Y'); ?> &mdash; Barrioteca Acalencá · Lebeche</p>
+            <div class="flex-1 text-right text-grey">Salobreña (Granada)</div>
         </div>
     </div>
 </footer>

@@ -49,7 +49,7 @@ $filter = isset($_GET['filter'])?$dbs->real_escape_string(simbio_security::xssFr
         <div class="form-group row">
           <label for="inputKeywords" class="col-sm-2 col-form-label"><?= __('Keyword')?></label>
           <div class="col-sm-10">
-            <input type="text"  class="form-control col-8" id="keywords" name="keywords" value="<?= $_GET['keywords']??'';?>">
+            <input type="text"  class="form-control col-8" id="keywords" name="keywords" value="<?= htmlspecialchars($_GET['keywords']??'', ENT_QUOTES, 'UTF-8');?>">
           </div>
         </div>
         <div class="form-group row">

@@ -27,8 +27,7 @@ $sysconf['template']['classic_youtube_link'] = '';
 $sysconf['template']['classic_instagram_link'] = 'https://www.instagram.com/acalenca/';
 $sysconf['template']['visitor_log_voice'] = 1;
 $sysconf['template']['classic_footer_about_us'] = <<<HTML
-<p>As a complete Library Management System, SLiMS (Senayan Library Management System) has many features that will help libraries and librarians to do their job easily 
-and quickly. Follow <a target="_blank" href="https://slims.web.id/web/pages/about/">this link</a> to show some features provided by SLiMS.</p>
+<p><p>La Barrioteca Acalencá es una biblioteca vecinal autogestionada de Salobreña (Granada), impulsada por la asociación cultural y vecinal Lebeche.</p>
 HTML;
 $sysconf['template']['classic_library_disableslide'] = 0;
 

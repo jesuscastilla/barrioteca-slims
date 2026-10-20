@@ -39,7 +39,7 @@ $main_menus = [
             echo '<img class="h-8 w-8" src="'.assets('images/logo.png').'">';
         } else {
         ?>
-        <img src="https://static.slims.web.id/logo.svg" class="fill-current text-white inline-block h-8 w-8"/>
+        <img src="" class="fill-current text-white inline-block h-8 w-8"/>
         <?php } ?>
         <div class="inline-flex flex-col leading-tight ml-2">
             <h1 class="text-lg m-0 p-0"><?php echo $sysconf['library_name']; ?></h1>

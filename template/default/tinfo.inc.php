@@ -208,7 +208,7 @@ $sysconf['template']['option'][$sysconf['template']['theme']] = [
         'dbfield' => 'classic_instagram_link',
         'label' => __('Instagram URL'),
         'type' => 'longtext',
-        'default' => 'https://www.instagram.com/slims.sdc',
+        'default' => 'https://www.instagram.com/acalenca/',
         'width' => '100',
         'max' => 1000
     ],

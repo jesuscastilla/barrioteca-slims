@@ -2,7 +2,6 @@
 
 > REGLAS CRÍTICAS E INAPELABLES. Tienen prioridad máxima en todos los modos de ejecución,
 > incluidos el modo de rama y de pull request. Si no puedes cumplirlas, no ejecutes la tarea.
-> Estas mismas reglas están también configuradas en el panel de Jules (jules.google.com).
 
 ## Reglas obligatorias para agentes automáticos
 

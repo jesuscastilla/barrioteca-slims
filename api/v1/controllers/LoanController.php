@@ -21,40 +21,28 @@ class LoanController extends Controller
     }
 
     function getSummary() {
+        $query_str = "SELECT
+            COUNT(loan_id) AS total,
+            SUM(CASE WHEN is_return=0 AND is_lent=1 THEN 1 ELSE 0 END) AS new_loan,
+            SUM(CASE WHEN is_return=1 AND is_lent=1 THEN 1 ELSE 0 END) AS return_loan,
+            SUM(CASE WHEN is_return=0 AND is_lent=1 AND renewed > 0 THEN 1 ELSE 0 END) AS extend_loan,
+            SUM(CASE WHEN is_return=0 AND is_lent=1 AND due_date < now() THEN 1 ELSE 0 END) AS overdue_loan
+        FROM loan";
+
+        $query = $this->db->query($query_str);
+        $row = $query ? $query->fetch_assoc() : [
+            'total' => 0, 'new_loan' => 0, 'return_loan' => 0, 'extend_loan' => 0, 'overdue_loan' => 0
+        ];
+
         parent::withJson([
             'data' => [
-                'total' => $this->getTotal(),
-                'new' => $this->getNew(),
-                'return' => $this->getReturn(),
-                'extend' => $this->getExtends(),
-                'overdue' => $this->getOverdue()
+                'total' => (int)($row['total'] ?? 0),
+                'new' => (int)($row['new_loan'] ?? 0),
+                'return' => (int)($row['return_loan'] ?? 0),
+                'extend' => (int)($row['extend_loan'] ?? 0),
+                'overdue' => (int)($row['overdue_loan'] ?? 0)
             ]
         ]);
-    }
-
-    private function getTotal() {
-        $query = $this->db->query("SELECT COUNT(loan_id) FROM loan");
-        return ($query->fetch_row())[0];
-    }
-
-    private function getNew() {
-        $query = $this->db->query("SELECT COUNT(loan_id) FROM loan WHERE is_return=0 AND is_lent=1");
-        return ($query->fetch_row())[0];
-    }
-
-    private function getReturn() {
-        $query = $this->db->query("SELECT COUNT(loan_id) FROM loan WHERE is_return=1 AND is_lent=1");
-        return ($query->fetch_row())[0];
-    }
-
-    private function getExtends() {
-        $query = $this->db->query("SELECT COUNT(loan_id) FROM loan WHERE is_return=0 AND is_lent=1 AND renewed > 0");
-        return ($query->fetch_row())[0];
-    }
-
-    private function getOverdue() {
-        $query = $this->db->query("SELECT COUNT(loan_id) FROM loan WHERE is_return=0 AND is_lent=1 AND due_date < now()");
-        return ($query->fetch_row())[0];
     }
 
     public function getDate($start_date, $print = true)

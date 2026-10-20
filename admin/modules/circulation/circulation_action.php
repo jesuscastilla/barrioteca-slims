@@ -174,7 +174,7 @@ if (isset($_POST['tempLoanID'])) {
         echo '<body>';
         if ($sysconf['loan_limit_override']) {
             // hidden form holding item code
-            echo '<form method="post" name="overrideForm" action="'.MWB.'circulation/circulation_action.php"><input type="hidden" name="overrideID" value="'.$_POST['tempLoanID'].'" /></form>';
+            echo '<form method="post" name="overrideForm" action="'.MWB.'circulation/circulation_action.php"><input type="hidden" name="overrideID" value="'.htmlspecialchars($_POST['tempLoanID'], ENT_QUOTES, 'UTF-8').'" /></form>';
             echo '<script type="text/javascript">';
             echo 'var confOverride = confirm(\''.__('Loan Limit Reached!').'\' + "\n" + \''.__('Do You Want To Overide This?').'\');';
             echo 'if (confOverride) { ';
@@ -195,7 +195,7 @@ if (isset($_POST['tempLoanID'])) {
         echo '<html>';
         echo '<body>';
         echo '<form method="post" name="overrideForm" action="'.MWB.'circulation/circulation_action.php">';
-        echo '<input type="hidden" name="overrideID" value="'.$_POST['tempLoanID'].'" /></form>';
+        echo '<input type="hidden" name="overrideID" value="'.htmlspecialchars($_POST['tempLoanID'], ENT_QUOTES, 'UTF-8').'" /></form>';
         echo '<script type="text/javascript">';
         echo 'var confOverride = confirm(\''.__('WARNING! This Item is reserved by another member').'\' + "\n" + \''.__('Do You Want To Overide This?').'\');';
         echo 'if (confOverride) { ';

@@ -27,8 +27,8 @@ if (!$reportView) {
 </div>
 <div class="sub_section">
     <form method="get" action="<?= $_SERVER['PHP_SELF'] . '?' . httpQuery(); ?>" target="reportView">
-        <input type="hidden" name="id" value="<?= $_GET['id'] ?>"/>
-        <input type="hidden" name="mod" value="<?= $_GET['mod'] ?>"/>
+        <input type="hidden" name="id" value="<?= htmlspecialchars($_GET['id'] ?? '', ENT_QUOTES, 'UTF-8') ?>"/>
+        <input type="hidden" name="mod" value="<?= htmlspecialchars($_GET['mod'] ?? '', ENT_QUOTES, 'UTF-8') ?>"/>
         <input type="hidden" name="report" value="yes"/>
         <div id="filterForm">
             <!-- Copy me if you want to make your custom field -->

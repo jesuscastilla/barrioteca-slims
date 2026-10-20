@@ -54,12 +54,12 @@ if ($q) {
   .topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 28px; background: rgba(245,245,240,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid #e5e5e0; position: sticky; top: 0; z-index: 100; }
   .topbar h1 { font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 1.4rem; font-weight: 700; color: #141414; }
   .topbar .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em; opacity: 0.5; text-transform: uppercase; }
-  .topbar .btns { display: flex; gap: 10px; }
-  .btn { padding: 10px 20px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: 0.06em; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-  .btn-staff { background: #141414; color: #F5F5F0; }
-  .btn-staff:hover { background: #333; }
-  .btn-member { background: #F5F5F0; color: #141414; border: 1px solid #d5d5d0; }
-  .btn-member:hover { background: #e8e8e4; }
+  .topbar .tabs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tab { padding: 10px 18px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: 0.06em; transition: all 0.2s; font-family: 'Inter', sans-serif; color: #141414; background: transparent; border: 1px solid transparent; }
+  .tab:hover { background: #e8e8e4; }
+  .tab-active { background: #141414; color: #F5F5F0; }
+  .tab-active:hover { background: #333; }
+  .tab-staff { border-color: #d5d5d0; }
 
   .container { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
   h2 { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; color: rgba(20,20,20,0.5); display: flex; align-items: center; gap: 8px; }
@@ -101,7 +101,7 @@ if ($q) {
     .book-card .cover { height: 180px; }
     .topbar { padding: 12px 16px; flex-direction: column; gap: 8px; align-items: stretch; }
     .topbar h1 { font-size: 1.1rem; }
-    .btn { padding: 8px 14px; font-size: 0.68rem; }
+    .tab { padding: 8px 14px; font-size: 0.68rem; }
   }
 </style>
 </head>
@@ -111,10 +111,11 @@ if ($q) {
     <h1>Barrioteca Acalencá</h1>
     <span class="mono">Catálogo público</span>
   </div>
-  <div class="btns">
-    <a href="/barrioteca/" class="btn btn-member">Socias</a>
-    <a href="index.php?p=login" class="btn btn-staff">Staff</a>
-  </div>
+  <nav class="tabs">
+    <a href="index.php" class="tab tab-active">Inicio</a>
+    <a href="/barrioteca/" class="tab">Web</a>
+    <a href="index.php?p=login" class="tab tab-staff">Staff</a>
+  </nav>
 </div>
 
 <div class="container">

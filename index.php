@@ -1,16 +1,16 @@
 <?php
-// Si hay parametros GET (login, member, etc), cargar el OPAC original completo (excepto 'page' para paginacion)
+// Si hay parámetros GET (login, member, etc), cargar el OPAC original completo (excepto 'page' para paginación)
 $get_keys = array_keys($_GET);
 if (!empty($_GET) && !($get_keys === ['page'])) {
     require __DIR__ . '/index_opac_original.php';
     exit;
 }
 
-// Cargar configuracion minima de SLiMS para acceder a la BD
+// Cargar configuración mínima de SLiMS para acceder a la BD
 define('INDEX_AUTH', '1');
 require 'sysconfig.inc.php';
 
-// Paginacion
+// Paginación
 $limit = 24;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
@@ -23,7 +23,7 @@ if ($count_query && $row = $count_query->fetch_assoc()) {
 }
 $totalPages = ceil($totalLibros / $limit);
 
-// Consultar los libros disponibles con limite
+// Consultar los libros disponibles con límite
 $libros = [];
 $q = $dbs->query("SELECT b.biblio_id, b.title, COALESCE(GROUP_CONCAT(DISTINCT a.author_name ORDER BY ba.level SEPARATOR '; '), '') AS author, b.image, b.notes, b.isbn_issn FROM biblio b LEFT JOIN biblio_author ba ON b.biblio_id = ba.biblio_id LEFT JOIN mst_author a ON ba.author_id = a.author_id WHERE b.opac_hide < 1 GROUP BY b.biblio_id ORDER BY b.last_update DESC LIMIT $offset, $limit");
 if ($q) {
@@ -45,7 +45,7 @@ if ($q) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Barrioteca Acalenca - Catalogo</title>
+<title>Barrioteca Acalencá - Catálogo</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=JetBrains+Mono:wght@400;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -108,8 +108,8 @@ if ($q) {
 <body>
 <div class="topbar">
   <div>
-    <h1>Barrioteca Acalenca</h1>
-    <span class="mono">Catalogo publico</span>
+    <h1>Barrioteca Acalencá</h1>
+    <span class="mono">Catálogo público</span>
   </div>
   <div class="btns">
     <a href="/barrioteca/" class="btn btn-member">Socias</a>
@@ -119,13 +119,13 @@ if ($q) {
 
 <div class="container">
   <h2>
-    Catalogo
+    Catálogo
     <?php if (!empty($libros)): ?>
     <span class="count"><?= $totalLibros ?> libros</span>
     <?php endif; ?>
   </h2>
   <?php if (empty($libros)): ?>
-  <div class="empty">El catalogo esta vacio.</div>
+  <div class="empty">El catálogo está vacío.</div>
   <?php else: ?>
   <div class="grid">
     <?php foreach ($libros as $i => $l): ?>
@@ -152,7 +152,7 @@ if ($q) {
     <span>Anterior</span>
     <?php endif; ?>
 
-    <span>Pagina <?= $page ?> de <?= $totalPages ?></span>
+    <span>Página <?= $page ?> de <?= $totalPages ?></span>
 
     <?php if ($page < $totalPages): ?>
     <a href="?page=<?= $page + 1 ?>">Siguiente</a>

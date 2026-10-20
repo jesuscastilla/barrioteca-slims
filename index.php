@@ -113,7 +113,7 @@ if ($q) {
   </div>
   <nav class="tabs">
     <a href="index.php" class="tab tab-active">Inicio</a>
-    <a href="/barrioteca/" class="tab">Web</a>
+    <a href="/barrioteca/" class="tab">Barrioteca</a>
     <a href="index.php?p=login" class="tab tab-staff">Staff</a>
   </nav>
 </div>

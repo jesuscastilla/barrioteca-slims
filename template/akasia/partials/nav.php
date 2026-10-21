@@ -1,5 +1,5 @@
 <nav class="s-menu-content animated-fast" role="navigation">
-  <a href="#" id="hide-menu" class="s-menu-toggle"><span></span></a>
+  <a href="#" id="hide-menu" class="s-menu-toggle" aria-label="<?php echo __('Close menu'); ?>"><span></span></a>
   <h1>Menu</h1>
   <ul>
     <li><a href="index.php"><?php echo __('Home'); ?></a></li>

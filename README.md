@@ -37,7 +37,3 @@ Setting docker default can be change on docker-compose.yml
 - [PHP](https://www.php.net/) — lenguaje del backend.
 - [MariaDB](https://mariadb.org/) / [MySQL](https://www.mysql.com/) — base de datos.
 - [Docker](https://www.docker.com/) — entorno de desarrollo.
-
-## Mantenimiento automático
-
-Este repositorio es revisado **cada noche** por agentes automáticos que buscan bugs en el código. Por ello, entre las **03:00** y las **05:00** es probable que no todo funcione correctamente.

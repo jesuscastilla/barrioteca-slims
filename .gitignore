@@ -84,6 +84,3 @@ entrypoint.sh
 _slims_import_*.json
 images/*.png
 
-# Agente Jules: artefactos locales (no versionar)
-.jules/
-jules-*
